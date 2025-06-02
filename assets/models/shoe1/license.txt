@@ -1,0 +1,11 @@
+Model Information:
+* title:	Vans Shoe
+* source:	https://sketchfab.com/3d-models/vans-shoe-51fa13593b8346028135e15fe72b0831
+* author:	iamai (https://sketchfab.com/iamai)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Vans Shoe" (https://sketchfab.com/3d-models/vans-shoe-51fa13593b8346028135e15fe72b0831) by iamai (https://sketchfab.com/iamai) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,76 @@
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  opacity: 0.8;
+}
+
+/* Hide A-Frame VR Mode UI when not needed */
+.a-enter-vr {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Custom loading screen */
+.a-loader-title {
+  background-color: #000;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  padding: 20px;
+  position: fixed;
+  top: 60% !important;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 100px;
+}
+
+.loading-spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+/* Loading bar styles */
+.loading-bar-container {
+  width: 300px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.loading-bar {
+  width: 0%;
+  height: 100%;
+  background-color: #3498db;
+  border-radius: 10px;
+  transition: width 0.3s ease-in-out;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

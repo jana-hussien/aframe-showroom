@@ -1,0 +1,11 @@
+Model Information:
+* title:	warehouse_3D
+* source:	https://sketchfab.com/3d-models/warehouse-3d-50fcde225eef4429b0c899c674043efd
+* author:	ganash3691 (https://sketchfab.com/ganash3691)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "warehouse_3D" (https://sketchfab.com/3d-models/warehouse-3d-50fcde225eef4429b0c899c674043efd) by ganash3691 (https://sketchfab.com/ganash3691) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

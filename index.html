@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>a-frame test</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-blink-controls/dist/aframe-blink-controls.min.js"></script>
+    <script src="components/movement-controls.js"></script>
+    <script src="components/object-controls.js"></script>
+    <script src="components/info-popup.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script>
+      // Component to resize model based on bounding box dimensions
+      AFRAME.registerComponent('resize', {
+        schema: {
+          axis: {
+            type: 'string',
+            default: 'y'
+          },
+          value: {
+            type: 'number',
+            default: 1
+          }
+        },
+        init: function() {
+          var el = this.el;
+          var data = this.data;
+          var model = el.object3D;
+          el.addEventListener('model-loaded', function(e) {
+            var box = new THREE.Box3().setFromObject(model);
+            var size = box.getSize(new THREE.Vector3());
+            var x = size.x;
+            var y = size.y;
+            var z = size.z;
+            var scale;
+            if (data.axis === 'x') {
+              scale = data.value / x;
+            } else if (data.axis === 'y') {
+              scale = data.value / y;
+            } else {
+              scale = data.value / z;
+            }
+            el.setAttribute('scale', `${scale} ${scale} ${scale}`);
+          });
+        }
+      });
+
+      // Component for collision detection using raycasters
+      AFRAME.registerComponent('collision-check', {
+        init: function () {
+          this.raycasters = [];
+          const directions = [
+            { x: 0, z: 1 },  // forward
+            { x: 0, z: -1 }, // backward
+            { x: 1, z: 0 },  // right
+            { x: -1, z: 0 }  // left
+          ];
+          
+          // Create raycasters in each direction
+          directions.forEach(dir => {
+            const raycaster = document.createElement('a-entity');
+            raycaster.setAttribute('raycaster', {
+              objects: '.collidable',
+              far: 0.5,
+              direction: `${dir.x} 0 ${dir.z}`
+            });
+            this.el.appendChild(raycaster);
+            this.raycasters.push(raycaster);
+          });
+        },
+        
+        tick: function () {
+          // Check each raycaster for intersections
+          this.raycasters.forEach(raycaster => {
+            const intersections = raycaster.components.raycaster.intersections;
+            if (intersections.length > 0) {
+              // Collision detected, prevent movement in this direction
+              const intersection = intersections[0];
+              const distance = intersection.distance;
+              if (distance < 0.5) {
+                // Move player back slightly
+                const normal = intersection.face.normal;
+                const rigPosition = this.el.object3D.position;
+                rigPosition.x += normal.x * (0.5 - distance);
+                rigPosition.z += normal.z * (0.5 - distance);
+              }
+            }
+          });
+        }
+      });
+
+      // Component to move rig forward when B is pressed on right controller
+      AFRAME.registerComponent('move-forward', {
+        init: function () {
+          this.el.addEventListener('buttondown', (evt) => {
+            if (evt.detail.id === 'trigger' && evt.detail.state === 'start') {
+              const rig = this.el;
+              const camera = rig.querySelector('[camera]');
+              const direction = new THREE.Vector3();
+              camera.getWorldDirection(direction);
+              direction.y = 0; // Ignore vertical direction
+              direction.normalize();
+              rig.object3D.position.add(direction.multiplyScalar(0.1));
+            }
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="customLoadingScreen" class="loading-overlay">
+      <h1 style="color: white; font-family: Arial, sans-serif; margin-bottom: 40px;">Pronto Store</h1>
+      <div class="loading-spinner"></div>
+      <div id="loadingText" style="color: white; margin-top: 20px; font-family: Arial, sans-serif;">Loading Assets: 0%</div>
+      <div class="loading-bar-container">
+        <div id="loadingBar" class="loading-bar"></div>
+      </div>
+    </div>
+
+    <a-scene 
+      loading-screen="enabled: true; dotsColor: white; backgroundColor: black"
+      renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true"
+      embedded>
+      
+      <!-- Asset Management System -->
+      <a-assets timeout="5000">
+        <!-- Environment Model - Replace with your actual model path -->
+        <a-asset-item id="environment-model" src="assets/models/environment/scene.gltf" crossorigin="anonymous"
+          onload="console.log('🟢 Environment model loaded')"
+          onerror="console.error('🔴 Environment model failed to load', event)"></a-asset-item>
+      </a-assets>
+
+      <!-- Environment -->
+      <a-entity
+        id="environment"
+        gltf-model="#environment-model"
+        resize="axis: y; value: 3"
+        class="collidable">
+      </a-entity>
+
+      <!-- Player -->
+      <a-entity id="player">
+        <!-- camera -->
+        <a-entity id="camera" camera wasd-controls look-controls></a-entity>
+        <!-- hand controls -->
+        <a-entity id="left-hand" oculus-touch-controls="hand: left" blink-controls button:trigger></a-entity>
+        <a-entity id="right-hand" oculus-touch-controls="hand: right" button:trigger></a-entity>
+      </a-entity>
+
+      <!-- Enhanced Lighting Setup -->
+      <!-- Main ambient light for overall scene brightness -->
+      <a-light type="ambient" intensity="0.4" color="#ffffff"></a-light>
+      
+      <!-- Main directional light (simulating sun/key light) -->
+      <a-light type="directional" 
+               intensity="0.6" 
+               color="#fffaf2"
+               position="-1 1 0.5" 
+               castShadow="true"
+               shadow-camera-left="-10"
+               shadow-camera-right="10"
+               shadow-camera-top="10"
+               shadow-camera-bottom="-10">
+      </a-light>
+
+      <!-- Fill light for softer shadows -->
+      <a-light type="directional" 
+               intensity="0.3" 
+               color="#b8d9ff" 
+               position="1 0.5 -0.5">
+      </a-light>
+
+      <!-- Accent lights for depth and atmosphere -->
+      <a-light type="point" 
+               intensity="0.4" 
+               color="#ffebcc" 
+               position="-2 2.5 -2" 
+               distance="5" 
+               decay="2">
+      </a-light>
+      <a-light type="point" 
+               intensity="0.4" 
+               color="#ffebcc" 
+               position="2 2.5 -2" 
+               distance="5" 
+               decay="2">
+      </a-light>
+
+      <!-- Player -->
+      <a-entity id="rig" position="0 0 0" movement-controls="enabled: true;" collision-check>
+        <a-entity id="camera" 
+          camera 
+          look-controls 
+          position="0 1.2 0">
+          <a-entity 
+            raycaster="objects: .interactive-model, .view-popup"
+            cursor="rayOrigin: mouse; visible: false">
+          </a-entity>
+        </a-entity>
+        
+        <!-- VR Controllers -->
+        <a-entity id="leftHand" 
+                  hand-controls="hand: left" 
+                  laser-controls="hand: left"
+                  raycaster="objects: .interactive-model, .view-popup; far: 10; lineColor: #FF0000; lineOpacity: 0.5">
+        </a-entity>
+        <a-entity id="rightHand" 
+                  hand-controls="hand: right" 
+                  laser-controls="hand: right"
+                  raycaster="objects: .interactive-model, .view-popup; far: 10; lineColor: #00FF00; lineOpacity: 0.5">
+        </a-entity>
+      </a-entity>
+
+      <!-- Showcase Models -->
+      <a-entity id="showcase">
+
+        </a-entity>
+      </a-entity>
+
+    </a-scene>
+
+    <script>
+      // Loading management
+      const scene = document.querySelector('a-scene');
+      const loadingScreen = document.getElementById('customLoadingScreen');
+      const loadingText = document.getElementById('loadingText');
+      const loadingBar = document.getElementById('loadingBar');
+
+      // Get all assets that need to be loaded
+      const assets = Array.from(document.querySelectorAll('a-asset-item, img'));
+      let assetsLoaded = 0;
+      const totalAssets = assets.length;
+
+      console.log(`%c🎯 Starting to load ${totalAssets} assets...`, 'color: #9C27B0; font-weight: bold; font-size: 14px;');
+
+      // Track loading progress for each asset
+      function updateProgress() {
+        assetsLoaded++;
+        const progress = Math.floor((assetsLoaded / totalAssets) * 100);
+        
+        console.log(`%c📊 Loading Progress: ${progress}% (${assetsLoaded}/${totalAssets})`, 'color: #FF9800; font-weight: bold;');
+        
+        // Update loading text and bar
+        loadingText.textContent = `Loading Assets: ${progress}%`;
+        loadingBar.style.width = `${progress}%`;
+
+        if (assetsLoaded === totalAssets) {
+          console.log('%c✨ All assets loaded!', 'color: #4CAF50; font-weight: bold; font-size: 14px;');
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }
+      }
+
+      // Add loading listeners to all assets
+      assets.forEach(asset => {
+        const startTime = performance.now();
+        
+        // Log when starting to load each asset
+        console.log(`%c🔄 Starting to load: ${asset.id || asset.src}`, 'color: #607D8B;');
+
+        // Add loaded event listener
+        asset.addEventListener('loaded', () => {
+          const loadTime = (performance.now() - startTime) / 1000;
+          console.log(`%c✅ Loaded: ${asset.id || asset.src} (took ${loadTime.toFixed(2)}s)`, 'color: #4CAF50;');
+          updateProgress();
+        });
+        
+        // Add error event listener
+        asset.addEventListener('error', (err) => {
+          console.error(`❌ Error loading asset: ${asset.id || asset.src}`, err);
+          updateProgress(); // Count failed loads to avoid hanging
+        });
+      });
+
+      // Handle scene loaded event
+      scene.addEventListener('loaded', function () {
+        console.log('%c🌟 Scene fully loaded!', 'color: #E91E63; font-weight: bold; font-size: 14px;');
+      });
+
+      // Dynamic model loading from config.json
+      fetch('assets/models/config.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to load config.json');
+          }
+          return response.json();
+        })
+        .then(models => {
+          const showcase = document.querySelector('#showcase');
+          models.forEach(model => {
+            try {
+              const entity = document.createElement('a-entity');
+              entity.setAttribute('gltf-model', model.path);
+              entity.setAttribute('position', model.position);
+
+              // Apply animations based on type
+              const animationType = model.animationType || 'hoverAndRotate';
+
+              if (animationType === 'hover' || animationType === 'hoverAndRotate') {
+                entity.setAttribute('animation__hover', {
+                  property: 'position',
+                  to: `${model.position.split(' ')[0]} ${parseFloat(model.position.split(' ')[1]) + 0.2} ${model.position.split(' ')[2]}`,
+                  loop: true,
+                  dir: 'alternate',
+                  dur: 2000,
+                  easing: 'easeInOutSine'
+                });
+              }
+
+              if (animationType === 'rotate' || animationType === 'hoverAndRotate') {
+                entity.setAttribute('animation__rotation', {
+                  property: 'rotation',
+                  to: '0 360 0',
+                  loop: true,
+                  dur: 5000,
+                  easing: 'linear'
+                });
+              }
+
+              // Apply height resizing
+              entity.setAttribute('resize', {
+                axis: 'y',
+                value: model.height
+              });
+
+              showcase.appendChild(entity);
+            } catch (error) {
+              console.error(`Error loading model ${model.id}:`, error);
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error loading models:', error);
+        });
+    </script>
+  </body>
+</html>
