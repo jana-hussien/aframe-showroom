@@ -1,6 +1,6 @@
-# VR Showroom (A-Frame)
+# VR Showroom (Work in Progress)
 
-This project is a VR/AR showroom built with [A-Frame](https://aframe.io/), supporting both desktop and immersive WebXR experiences. Models and their placement are managed dynamically via a `config.json` file.
+This project is a showroom built with [A-Frame](https://aframe.io/), supporting both desktop and immersive WebXR experiences. Models and their placement are managed dynamically via a `config.json` file.
 
 ## Features
 - **Movement controls** Swap between teleportation mode (only available in VR mode: hold down the trigger and aim), and movement controls (WASD for desktop, joysticks for VR).
