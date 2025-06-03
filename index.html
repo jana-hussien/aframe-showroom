@@ -16,10 +16,12 @@
   <script src="https://cdn.jsdelivr.net/npm/handy-work@3.1.11/build/handy-controls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/handy-work@3.1.11/build/magnet-helpers.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-htmlmesh@2.4.0/build/aframe-html.min.js"></script>
-  <script src="components/ar-shadow-helper.js"></script>
+
+  <!-- Custom components and main logic (must come after A-Frame and dependencies) -->
   <script src="components/ar-cursor.js"></script>
   <script src="components/simple-navmesh-constraint.js"></script>
   <script src="components/model-utils.js"></script>
+  <script src="components/ar-shadow-helper.js"></script>
   <script src="main.js"></script>
   
   <link rel="stylesheet" href="style.css">
@@ -27,7 +29,7 @@
 
 <body>
   <a-scene
-    environment="preset: osiris; shadow: true; ground: none; groundColor: #888; skyType: atmosphere; skyColor: #bde0fe; horizonColor: #fff; lighting: distant;"
+    environment="preset: forest; shadow: true; ground: none; groundColor: #888; skyType: atmosphere; skyColor: #bde0fe; horizonColor: #fff; lighting: distant;"
     physx="autoLoad: true; delay: 1000; wasmUrl: https://cdn.jsdelivr.net/gh/c-frame/physx@v0.2.0/wasm/physx.release.wasm; useDefaultScene: false;"
     webxr="overlayElement:#dom-overlay;"
     background="color:skyblue;"
@@ -43,14 +45,10 @@
       <a-mixin id="handle-visual" geometry="width:0.05;height:0.05;depth:0.2"></a-mixin>
     </a-assets>
 
-<<<<<<< HEAD
     <a-gltf-model src="#environment-gltf" material="side:front"></a-gltf-model>
     <!-- Environment model entity added above -->
     <a-gltf-model class="navmesh" src="#navmesh-glb" visible="false"></a-gltf-model>
     <a-entity id="models-root"></a-entity>
-=======
-
->>>>>>> c5f6e42522809369722b8cdb40bca3c389a644be
     <a-entity
       id="cameraRig"
       simple-navmesh-constraint="navmesh:.navmesh;fall:0.5;height:0;exclude:.navmesh-hole;"
@@ -113,59 +111,89 @@
     <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
   </a-scene>
 
+  <div id="loading-screen" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#222;color:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;font-size:2em;">Loading assets...</div>
+
   <script>
-    // Load models from config.json 
-    fetch('config.json')
-      .then(res => res.json())
-      .then(models => {
-        const root = document.getElementById('models-root');
-        models.forEach(model => {
-          try {
-            const entity = document.createElement('a-entity');
-            entity.setAttribute('gltf-model', model.path);
-            entity.setAttribute('position', model.position);
+    // Show loading screen until all assets and models are loaded
+    const loadingScreen = document.getElementById('loading-screen');
+    let modelsToLoad = 0;
+    let modelsLoaded = 0;
 
-            // Hover animation
-            if (model.animationType === 'hover' || model.animationType === 'hoverAndRotate') {
-              entity.setAttribute('animation__hover', {
-                property: 'position',
-                to: `${model.position.split(' ')[0]} ${parseFloat(model.position.split(' ')[1]) + 0.2} ${model.position.split(' ')[2]}`,
-                loop: true,
-                dir: 'alternate',
-                dur: 2000,
-                easing: 'easeInOutSine'
-              });
-            }
+    function checkAllLoaded() {
+      if (modelsToLoad > 0 && modelsLoaded >= modelsToLoad) {
+        if (loadingScreen) loadingScreen.style.display = 'none';
+      }
+    }
 
-            // Rotation animation
-            if (model.animationType === 'rotate' || model.animationType === 'hoverAndRotate') {
-              entity.setAttribute('animation__rotation', {
-                property: 'rotation',
-                to: '0 360 0',
-                loop: true,
-                dur: 5000,
-                easing: 'linear'
-              });
-            }
-
-            // Height resizing
-            if (model.height) {
-              entity.setAttribute('resize', {
-                axis: 'y',
-                value: model.height
-              });
-            }
-
-            entity.setAttribute('id', model.id);
-            root.appendChild(entity);
-          } catch (error) {
-            console.error(`Error loading model ${model.id}:`, error);
+    document.querySelector('a-assets').addEventListener('loaded', function () {
+      // Load models from config.json only after static assets are loaded
+      fetch('config.json')
+        .then(res => res.json())
+        .then(models => {
+          const root = document.getElementById('models-root');
+          modelsToLoad = models.length;
+          if (modelsToLoad === 0) {
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            return;
           }
+          models.forEach(model => {
+            try {
+              const entity = document.createElement('a-entity');
+              entity.setAttribute('gltf-model', model.path);
+              entity.setAttribute('position', model.position);
+
+              // Hover animation
+              if (model.animationType === 'hover' || model.animationType === 'hoverAndRotate') {
+                entity.setAttribute('animation__hover', {
+                  property: 'position',
+                  to: `${model.position.split(' ')[0]} ${parseFloat(model.position.split(' ')[1]) + 0.2} ${model.position.split(' ')[2]}`,
+                  loop: true,
+                  dir: 'alternate',
+                  dur: 2000,
+                  easing: 'easeInOutSine'
+                });
+              }
+
+              // Rotation animation
+              if (model.animationType === 'rotate' || model.animationType === 'hoverAndRotate') {
+                entity.setAttribute('animation__rotation', {
+                  property: 'rotation',
+                  to: '0 360 0',
+                  loop: true,
+                  dur: 5000,
+                  easing: 'linear'
+                });
+              }
+
+              // Height resizing
+              if (model.height) {
+                entity.setAttribute('resize', {
+                  axis: 'y',
+                  value: model.height
+                });
+              }
+
+              entity.setAttribute('id', model.id);
+              // Listen for model-loaded event
+              entity.addEventListener('model-loaded', () => {
+                modelsLoaded++;
+                checkAllLoaded();
+              });
+              root.appendChild(entity);
+            } catch (error) {
+              console.error(`Error loading model ${model.id}:`, error);
+              // Still count as loaded to avoid hanging
+              modelsLoaded++;
+              checkAllLoaded();
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error loading models:', error);
+          // If fetch fails, hide loading screen
+          if (loadingScreen) loadingScreen.style.display = 'none';
         });
-      })
-      .catch(error => {
-        console.error('Error loading models:', error);
-      });
+    });
 
     // Register the resize component
     AFRAME.registerComponent('resize', {
@@ -200,7 +228,7 @@
       <section style="display: inline-block; background: lavenderblush; color: #333333; border-radius: 1em; padding: 1em; margin:0; accent-color: hotpink;" id="my-interface">
         <h2>Settings</h2>
         <fieldset style="border:none;">
-          <legend>Thumbstick Behaviour</legend>
+          <legend>Movement Options</legend>
           <input onclick="toggleThumbstick(this)" type="radio" id="thumbstick-teleport" name="thumbstick" value="teleport" checked><label for="thumbstick-teleport"> Teleport</label>
           <input onclick="toggleThumbstick(this)" type="radio" id="thumbstick-move" name="thumbstick" value="move"><label for="thumbstick-move"> Move</label>
         </fieldset>

@@ -1,11 +1,11 @@
 Model Information:
-* title:	Venue
-* source:	https://sketchfab.com/3d-models/venue-1b4d4a6fde70478e94723fcd2918e660
-* author:	adarose (https://sketchfab.com/adarose)
+* title:	VR Gallery - Light Baked
+* source:	https://sketchfab.com/3d-models/vr-gallery-light-baked-625f8c2d2d4448c590aae1ce659f6f91
+* author:	Marc Sawyer (https://sketchfab.com/whitewashstudio)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "Venue" (https://sketchfab.com/3d-models/venue-1b4d4a6fde70478e94723fcd2918e660) by adarose (https://sketchfab.com/adarose) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "VR Gallery - Light Baked" (https://sketchfab.com/3d-models/vr-gallery-light-baked-625f8c2d2d4448c590aae1ce659f6f91) by Marc Sawyer (https://sketchfab.com/whitewashstudio) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
