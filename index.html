@@ -111,15 +111,29 @@
     <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
   </a-scene>
 
-  <div id="loading-screen" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#222;color:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;font-size:2em;">Loading assets...</div>
+  <div id="loading-screen" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#222;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-size:2em;">
+    <span id="loading-message">Loading assets...</span>
+    <span id="loading-progress" style="font-size:1em;margin-top:1em;"></span>
+  </div>
 
   <script>
     // Show loading screen until all assets and models are loaded
     const loadingScreen = document.getElementById('loading-screen');
+    const loadingMessage = document.getElementById('loading-message');
+    const loadingProgress = document.getElementById('loading-progress');
     let modelsToLoad = 0;
     let modelsLoaded = 0;
 
+    function updateProgress() {
+      if (modelsToLoad > 0) {
+        loadingProgress.textContent = `Loading models: ${modelsLoaded} / ${modelsToLoad}`;
+      } else {
+        loadingProgress.textContent = '';
+      }
+    }
+
     function checkAllLoaded() {
+      updateProgress();
       if (modelsToLoad > 0 && modelsLoaded >= modelsToLoad) {
         if (loadingScreen) loadingScreen.style.display = 'none';
       }
@@ -132,12 +146,15 @@
         .then(models => {
           const root = document.getElementById('models-root');
           modelsToLoad = models.length;
+          modelsLoaded = 0;
+          updateProgress();
           if (modelsToLoad === 0) {
             if (loadingScreen) loadingScreen.style.display = 'none';
             return;
           }
           models.forEach(model => {
             try {
+              console.log(`Loading model: ${model.id} (${model.path})`);
               const entity = document.createElement('a-entity');
               entity.setAttribute('gltf-model', model.path);
               entity.setAttribute('position', model.position);
@@ -177,6 +194,7 @@
               // Listen for model-loaded event
               entity.addEventListener('model-loaded', () => {
                 modelsLoaded++;
+                updateProgress();
                 checkAllLoaded();
               });
               root.appendChild(entity);
@@ -184,6 +202,7 @@
               console.error(`Error loading model ${model.id}:`, error);
               // Still count as loaded to avoid hanging
               modelsLoaded++;
+              updateProgress();
               checkAllLoaded();
             }
           });
