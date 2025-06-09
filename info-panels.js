@@ -1,4 +1,5 @@
 import infoPanelsData from './info-panels-data.js';
+import getWelcomeText from './get-welcome-text.js';
 
 // Billboard component for A-Frame (panels always face the player camera)
 AFRAME.registerComponent('billboard', {
@@ -41,6 +42,54 @@ AFRAME.registerComponent('panel-fade', {
   }
 });
 
+// Simple cursor-listener for click/tap events (works in all modes)
+AFRAME.registerComponent('cursor-listener', {
+  init: function () {
+    this.el.addEventListener('mouseenter', function () {
+      this.setAttribute('material', 'color', '#388e3c');
+    });
+    this.el.addEventListener('mouseleave', function () {
+      this.setAttribute('material', 'color', '#4caf50');
+    });
+  }
+});
+
+// Custom cursor-listener for X button (hover effect)
+AFRAME.registerComponent('cursor-listener-x', {
+  init: function () {
+    this.el.addEventListener('mouseenter', function () {
+      // Only change cursor color if both the button and its parent panel are visible
+      if ((this.getAttribute('visible') === false || this.getAttribute('visible') === 'false') ||
+          (this.parentElement && (this.parentElement.getAttribute('visible') === false || this.parentElement.getAttribute('visible') === 'false'))) return;
+      this.setAttribute('material', 'color', '#fff');
+      const txt = this.querySelector('[text]');
+      if (txt) txt.setAttribute('text', 'color', '#fff');
+      // Change cursor color to red on hover
+      const scene = this.sceneEl;
+      const camera = scene && scene.querySelector('#head');
+      if (camera) {
+        const cursor = camera.querySelector('a-cursor');
+        if (cursor) cursor.setAttribute('color', 'red');
+      }
+    });
+    this.el.addEventListener('mouseleave', function () {
+      // Only restore cursor color if both the button and its parent panel are visible
+      if ((this.getAttribute('visible') === false || this.getAttribute('visible') === 'false') ||
+          (this.parentElement && (this.parentElement.getAttribute('visible') === false || this.parentElement.getAttribute('visible') === 'false'))) return;
+      this.setAttribute('material', 'color', '#cccccc');
+      const txt = this.querySelector('[text]');
+      if (txt) txt.setAttribute('text', 'color', '#eeeeee');
+      // Restore cursor color
+      const scene = this.sceneEl;
+      const camera = scene && scene.querySelector('#head');
+      if (camera) {
+        const cursor = camera.querySelector('a-cursor');
+        if (cursor) cursor.setAttribute('color', '#fff');
+      }
+    });
+  }
+});
+
 function createInfoPanel(panel, idx) {
   const entity = document.createElement('a-entity');
   const [x, y, z] = (panel.position || '0 0 0').split(' ').map(Number);
@@ -66,11 +115,11 @@ function createInfoPanel(panel, idx) {
     : `\n${panel.title}\n\n${descValue}\n\n`;
 
   // Use a single entity with geometry, material, and text
-  entity.setAttribute('geometry', 'primitive: plane; width: 0; height: 0');
+  entity.setAttribute('geometry', 'primitive: plane; width: 1.1; height: 0.5');
   entity.setAttribute('material', 'src: #panel-texture; transparent: true; opacity: 0.95; side: double; shader: flat');
   entity.setAttribute('text', {
     value: textValue,
-    width: 1, // panel width
+    width: 1,
     color: '#fff',
     align: 'center',
     anchor: 'center',
@@ -78,6 +127,50 @@ function createInfoPanel(panel, idx) {
     wrapCount: 32,
     lineHeight: 60
   });
+
+  // Add X close button only to the WELCOME! panel
+  if (panel.title === 'WELCOME!') {
+    const button = document.createElement('a-image');
+    const panelWidth = 1.1;
+    const buttonSize = 0.08;
+    const margin = 0.05;
+    const x = (panelWidth / 2) - margin - (buttonSize / 2);
+    const y = (0.5 / 2) - margin - (buttonSize / 2);
+    button.setAttribute('src', '#x-mark');
+    button.setAttribute('width', buttonSize);
+    button.setAttribute('height', buttonSize);
+    button.setAttribute('position', `${x} ${y} 0.01`);
+    // Ensure X button always renders on top of the panel
+    button.addEventListener('loaded', function () {
+      if (button.getObject3D('mesh')) {
+        button.getObject3D('mesh').renderOrder = 10;
+      }
+    });
+    button.setAttribute('class', 'close-x-btn');
+    button.setAttribute('tabindex', '0');
+    button.setAttribute('transparent', 'true');
+    button.setAttribute('cursor-listener-x', '');
+    button.style = 'pointer-events: auto;';
+    function resetCursorColor() {
+      const scene = button.sceneEl;
+      const camera = scene && scene.querySelector('#head');
+      if (camera) {
+        const cursor = camera.querySelector('a-cursor');
+        if (cursor) cursor.setAttribute('color', '#fff');
+      }
+    }
+    button.addEventListener('click', function (evt) {
+      entity.setAttribute('visible', 'false');
+      resetCursorColor();
+    });
+    button.addEventListener('keydown', function (evt) {
+      if (evt.key === 'Enter' || evt.key === ' ') {
+        entity.setAttribute('visible', 'false');
+        resetCursorColor();
+      }
+    });
+    entity.appendChild(button);
+  }
 
   return entity;
 }
@@ -90,13 +183,7 @@ function getWelcomeDescription() {
     if (scene.is('vr-mode')) mode = 'vr';
     if (scene.is('ar-mode')) mode = 'ar';
   }
-  if (mode === 'vr') {
-    return 'Welcome to VR!\n\nUse your controllers to teleport or move.\nPress the menu button for settings.';
-  } else if (mode === 'ar') {
-    return 'Welcome to AR!\n\nMove your device to explore.\nUse touch or controllers for interaction.';
-  } else {
-    return 'Welcome!\n\nUse WASD to move, right-click to teleport.\nEnter VR/AR for immersive controls.';
-  }
+  return getWelcomeText(mode); // Use global getWelcomeText from index.html
 }
 
 // Add all info panels to the scene
@@ -127,16 +214,40 @@ export function addInfoPanelsToScene(sceneEl) {
     console.log(`[InfoPanels] Panel added: ${panel.title}`);
   });
 
-  // Update WELCOME panel description on mode change
-  function updateWelcomePanel() {
+  function addOrShowWelcomePanel() {
     const welcomePanel = document.getElementById('welcome-info-panel');
-    if (!welcomePanel) return;
-    const descEntity = Array.from(welcomePanel.children).find(child => {
-      return child.getAttribute && child.getAttribute('text') && child.getAttribute('text').value !== undefined && child.getAttribute('text').value.startsWith('Welcome');
-    });
-    if (descEntity) {
-      descEntity.setAttribute('text', 'value', getWelcomeDescription());
+    const mode = sceneEl.is('vr-mode') ? 'vr' : sceneEl.is('ar-mode') ? 'ar' : 'normal';
+    if (!welcomePanel) {
+      // Find the welcome panel data
+      const welcomeData = infoPanelsData.find(p => p.title === 'WELCOME!');
+      if (welcomeData) {
+        const entity = createInfoPanel(welcomeData, 0); // idx=0 for animation
+        entity.setAttribute('id', 'welcome-info-panel');
+        // Place at the top of the panels root
+        let panelsRoot = document.getElementById('info-panels-root');
+        if (!panelsRoot) {
+          panelsRoot = document.createElement('a-entity');
+          panelsRoot.setAttribute('id', 'info-panels-root');
+          sceneEl.appendChild(panelsRoot);
+        }
+        panelsRoot.insertBefore(entity, panelsRoot.firstChild);
+      }
+    } else {
+      // If present but hidden, show and update text
+      if (welcomePanel.getAttribute('visible') === false || welcomePanel.getAttribute('visible') === 'false') {
+        welcomePanel.setAttribute('visible', 'true');
+      }
+      // Update text for current mode
+      const textComp = welcomePanel.getAttribute('text');
+      if (textComp) {
+        welcomePanel.setAttribute('text', 'value', getWelcomeDescription());
+      }
     }
+  }
+
+  // Update WELCOME panel description on mode change and restore if missing
+  function updateWelcomePanel() {
+    addOrShowWelcomePanel();
   }
   sceneEl.addEventListener('enter-vr', updateWelcomePanel);
   sceneEl.addEventListener('exit-vr', updateWelcomePanel);

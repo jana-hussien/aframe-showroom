@@ -36,3 +36,12 @@ body {
   border-top: 5px solid #ffffff55;
   color: white;
 }
+
+.close-x-btn {
+  cursor: pointer;
+  user-select: none;
+}
+
+.close-x-btn:focus {
+  outline: 2px solid #fff;
+}

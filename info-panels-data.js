@@ -2,7 +2,7 @@ export default [
   {
     title: 'WELCOME!',
     description: 'Aim your controller and press the trigger to teleport around and interact with objects.\n\nUse WASD to move, right-click to teleport. Enter VR/AR for immersive controls.',
-    position: '-3.75 1.16 -3'
+    position: '-5 1.16 0'
   },
   {
     title: 'Title',

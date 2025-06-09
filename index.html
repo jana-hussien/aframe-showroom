@@ -23,6 +23,7 @@
   <script src="components/model-utils.js"></script>
   <script src="components/ar-shadow-helper.js"></script>
   <script src="main.js"></script>
+
   
   <link rel="stylesheet" href="style.css">
 </head>
@@ -44,6 +45,7 @@
       <a-mixin id="blink" blink-controls="button:trigger;rotateOnTeleport:false;cameraRig: #cameraRig; teleportOrigin: #head; collisionEntities:.navmesh;"></a-mixin>
       <a-mixin id="handle-visual" geometry="width:0.05;height:0.05;depth:0.2"></a-mixin>
       <img id="panel-texture" src="assets/panel-bg.png" crossorigin="anonymous">
+      <img id="x-mark" src="assets/x-mark.png" crossorigin="anonymous">
     </a-assets>
 
     <a-gltf-model src="#environment-gltf" material="side:front"></a-gltf-model>
@@ -53,12 +55,12 @@
       id="cameraRig"
       simple-navmesh-constraint="navmesh:.navmesh;fall:0.5;height:0;exclude:.navmesh-hole;"
       movement-controls="speed:0.15;camera:#head;"
-      position="-5 0 0" rotation="0 270 0" origin-on-ar-start
+      position="-6 0 0" rotation="0 270 0" origin-on-ar-start
     >
       <!-- camera -->
       <a-entity id="head"
         camera="near:0.01;"
-        look-controls="pointerLockEnabled: false"
+        look-controls="pointerLockEnabled: true"
         position="0 1.65 0"
       ></a-entity>
       
@@ -163,15 +165,7 @@
       let mode = 'normal';
       if (scene.is('vr-mode')) mode = 'vr';
       if (scene.is('ar-mode')) mode = 'ar';
-      let text = '';
-      if (mode === 'normal') {
-        text = 'Welcome!\n\nUse WASD to move, right-click to teleport.\nEnter VR/AR for immersive controls.';
-      } else if (mode === 'vr') {
-        text = 'Welcome to VR!\n\nUse your controllers to teleport or move.\nPress the menu button for settings.';
-      } else if (mode === 'ar') {
-        text = 'Welcome to AR!\n\nMove your device to explore.\nUse touch or controllers for interaction.';
-      }
-      popupText.setAttribute('text', 'value', text);
+      popupText.setAttribute('text', 'value', getWelcomeText(mode));
     }
 
     // Show/hide popup based on mode (optional: hide after a timeout in immersive)
@@ -211,31 +205,78 @@
     // Desktop teleportation by right click
     document.addEventListener('contextmenu', function (e) {
       const sceneEl = document.querySelector('a-scene');
-      // Only allow in non-immersive mode
+      // Only allow in non-immersive mode (not VR/AR)
       if (!sceneEl.is('vr-mode') && !sceneEl.is('ar-mode')) {
         e.preventDefault();
-        // Get mouse position in normalized device coordinates
-        const rect = sceneEl.canvas.getBoundingClientRect();
-        const mouse = {
-          x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
-          y: -((e.clientY - rect.top) / rect.height) * 2 + 1
-        };
-        // Raycast from camera
-        const camera = document.getElementById('head').object3D;
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, camera.children[0]);
-        // Find navmesh
+        const cameraEl = document.getElementById('head');
+        const camera = cameraEl.object3D;
+        const cameraRig = document.getElementById('cameraRig');
         const navmesh = document.querySelector('.navmesh');
         if (!navmesh) return;
         const mesh = navmesh.getObject3D('mesh');
         if (!mesh) return;
-        const intersects = raycaster.intersectObject(mesh, true);
-        if (intersects.length > 0) {
-          // Teleport cameraRig to intersection point
-          const point = intersects[0].point;
-          const cameraRig = document.getElementById('cameraRig');
-          cameraRig.setAttribute('position', `${point.x} 0 ${point.z}`);
+        // Check if pointer lock is enabled (fullscreen mode)
+        const lookControls = cameraEl.components['look-controls'];
+        const pointerLocked = lookControls && lookControls.pointerLockEnabled && lookControls.el.is('pointer-locked');
+        if (pointerLocked) {
+          // Teleport in the camera's forward direction
+          const dir = new THREE.Vector3();
+          camera.getWorldDirection(dir);
+          // Raycast from camera position in forward direction
+          const origin = camera.getWorldPosition(new THREE.Vector3());
+          const raycaster = new THREE.Raycaster(origin, dir, 0, 100);
+          const intersects = raycaster.intersectObject(mesh, true);
+          if (intersects.length > 0) {
+            const point = intersects[0].point;
+            cameraRig.setAttribute('position', `${point.x} 0 ${point.z}`);
+          }
+        } else {
+          // Use mouse position
+          const rect = sceneEl.canvas.getBoundingClientRect();
+          const mouse = {
+            x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+            y: -((e.clientY - rect.top) / rect.height) * 2 + 1
+          };
+          // Raycast from camera
+          const raycaster = new THREE.Raycaster();
+          raycaster.setFromCamera(mouse, camera.children[0]);
+          const intersects = raycaster.intersectObject(mesh, true);
+          if (intersects.length > 0) {
+            const point = intersects[0].point;
+            cameraRig.setAttribute('position', `${point.x} 0 ${point.z}`);
+          }
         }
+      }
+    });
+
+    // Always add a-cursor to the camera in desktop mode if not present (unless in VR/AR)
+    function ensureDesktopCursor() {
+      const cameraEl = document.getElementById('head');
+      const sceneEl = document.querySelector('a-scene');
+      if (!cameraEl || !sceneEl) return;
+      const inImmersive = sceneEl.is('vr-mode') || sceneEl.is('ar-mode');
+      let cursor = cameraEl.querySelector('a-cursor');
+      if (!inImmersive && !cursor) {
+        cursor = document.createElement('a-cursor');
+        cursor.setAttribute('color', '#fff');
+        cursor.setAttribute('opacity', '0.85');
+        cursor.setAttribute('rayOrigin', 'entity');
+        cursor.setAttribute('fuse', 'false');
+        cameraEl.appendChild(cursor);
+      }
+      if (inImmersive && cursor) {
+        cursor.parentNode.removeChild(cursor);
+      }
+    }
+    document.addEventListener('pointerlockchange', ensureDesktopCursor);
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(ensureDesktopCursor, 500); // after DOM and scene load
+      const sceneEl = document.querySelector('a-scene');
+      if (sceneEl) {
+        sceneEl.addEventListener('enter-vr', ensureDesktopCursor);
+        sceneEl.addEventListener('exit-vr', ensureDesktopCursor);
+        sceneEl.addEventListener('enter-ar', ensureDesktopCursor);
+        sceneEl.addEventListener('exit-ar', ensureDesktopCursor);
       }
     });
 
