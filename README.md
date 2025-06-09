@@ -32,7 +32,7 @@ This project is a showroom built with [A-Frame](https://aframe.io/), supporting 
 
 ## Running
 
-There is no need to run locally, as it is hosted on Github Pages. on a VR headset, visit the website in the browser and enter VR mode.
+There is no need to run locally, as it is hosted on Github Pages. on a VR headset, visit the website in the browser and enter VR mode. When finished, it will be turned into a PWA which is installable on VR to remove the long waiting time for assets to load.
 
 ## Credits
 - Built with [A-Frame](https://aframe.io/)
