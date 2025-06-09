@@ -16,8 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/handy-work@3.1.11/build/handy-controls.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/handy-work@3.1.11/build/magnet-helpers.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-htmlmesh@2.4.0/build/aframe-html.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-slice9-component@1.1.0/dist/aframe-slice9-component.min.js"></script>
 
-  <!-- Custom components and main logic (must come after A-Frame and dependencies) -->
   <script src="components/ar-cursor.js"></script>
   <script src="components/simple-navmesh-constraint.js"></script>
   <script src="components/model-utils.js"></script>
@@ -43,6 +43,7 @@
       <a-asset-item id="environment-gltf" src="assets/models/environment/scene.gltf"></a-asset-item>
       <a-mixin id="blink" blink-controls="button:trigger;rotateOnTeleport:false;cameraRig: #cameraRig; teleportOrigin: #head; collisionEntities:.navmesh;"></a-mixin>
       <a-mixin id="handle-visual" geometry="width:0.05;height:0.05;depth:0.2"></a-mixin>
+      <img id="panel-texture" src="assets/panel-bg.png" crossorigin="anonymous">
     </a-assets>
 
     <a-gltf-model src="#environment-gltf" material="side:front"></a-gltf-model>
@@ -52,7 +53,7 @@
       id="cameraRig"
       simple-navmesh-constraint="navmesh:.navmesh;fall:0.5;height:0;exclude:.navmesh-hole;"
       movement-controls="speed:0.15;camera:#head;"
-      position="-1 0 1" rotation="0 45 0" origin-on-ar-start
+      position="-5 0 0" rotation="0 270 0" origin-on-ar-start
     >
       <!-- camera -->
       <a-entity id="head"
@@ -105,6 +106,8 @@
       </a-entity>
     </a-entity>
     <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
+
+    <a-entity id="popup-ui" position="0 1.2 -2"></a-entity>
   </a-scene>
 
   <div id="loading-screen" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#222;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-size:2em;">
@@ -134,6 +137,107 @@
         if (loadingScreen) loadingScreen.style.display = 'none';
       }
     }
+
+    // Remove settings popup if not in VR/AR
+    function updateSettingsPopup() {
+      const domOverlay = document.getElementById('dom-overlay');
+      const settingsSection = document.getElementById('my-interface');
+      const isVR = AFRAME.scenes[0].is('vr-mode');
+      const isAR = AFRAME.scenes[0].is('ar-mode');
+      if (!isVR && !isAR) {
+        if (domOverlay) domOverlay.style.display = 'none';
+        if (settingsSection) settingsSection.style.display = 'none';
+        console.log('[Overlay] Hiding dom-overlay and settings (normal mode)');
+      } else {
+        if (domOverlay) domOverlay.style.display = 'block';
+        if (settingsSection) settingsSection.style.display = 'inline-block';
+        console.log('[Overlay] Showing dom-overlay and settings (VR/AR mode)');
+      }
+      console.log(`[Overlay] updateSettingsPopup: isVR=${isVR}, isAR=${isAR}, domOverlay display=${domOverlay && domOverlay.style.display}, settings display=${settingsSection && settingsSection.style.display}`);
+    }
+
+    function updatePopupUI() {
+      const scene = AFRAME.scenes[0];
+      const popupText = document.getElementById('popup-ui-text');
+      if (!popupText || !scene) return;
+      let mode = 'normal';
+      if (scene.is('vr-mode')) mode = 'vr';
+      if (scene.is('ar-mode')) mode = 'ar';
+      let text = '';
+      if (mode === 'normal') {
+        text = 'Welcome!\n\nUse WASD to move, right-click to teleport.\nEnter VR/AR for immersive controls.';
+      } else if (mode === 'vr') {
+        text = 'Welcome to VR!\n\nUse your controllers to teleport or move.\nPress the menu button for settings.';
+      } else if (mode === 'ar') {
+        text = 'Welcome to AR!\n\nMove your device to explore.\nUse touch or controllers for interaction.';
+      }
+      popupText.setAttribute('text', 'value', text);
+    }
+
+    // Show/hide popup based on mode (optional: hide after a timeout in immersive)
+    function updatePopupVisibility() {
+      const scene = AFRAME.scenes[0];
+      const popup = document.getElementById('popup-ui');
+      if (!popup || !scene) return;
+      // Always show in normal mode, show for 7s in VR/AR then hide
+      if (scene.is('vr-mode') || scene.is('ar-mode')) {
+        popup.setAttribute('visible', true);
+        setTimeout(() => { popup.setAttribute('visible', false); }, 7000);
+      } else {
+        popup.setAttribute('visible', true);
+      }
+    }
+
+    // Update popup on startup and mode changes
+    function updatePopupAll() {
+      updatePopupUI();
+      updatePopupVisibility();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // Only update settings popup after scene is fully loaded
+      const sceneEl = document.querySelector('a-scene');
+      sceneEl.addEventListener('loaded', function() {
+        updateSettingsPopup();
+        updatePopupAll();
+      });
+      // Also update on mode change
+      sceneEl.addEventListener('enter-vr', updatePopupAll);
+      sceneEl.addEventListener('exit-vr', updatePopupAll);
+      sceneEl.addEventListener('enter-ar', updatePopupAll);
+      sceneEl.addEventListener('exit-ar', updatePopupAll);
+    });
+
+    // Desktop teleportation by right click
+    document.addEventListener('contextmenu', function (e) {
+      const sceneEl = document.querySelector('a-scene');
+      // Only allow in non-immersive mode
+      if (!sceneEl.is('vr-mode') && !sceneEl.is('ar-mode')) {
+        e.preventDefault();
+        // Get mouse position in normalized device coordinates
+        const rect = sceneEl.canvas.getBoundingClientRect();
+        const mouse = {
+          x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+          y: -((e.clientY - rect.top) / rect.height) * 2 + 1
+        };
+        // Raycast from camera
+        const camera = document.getElementById('head').object3D;
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera.children[0]);
+        // Find navmesh
+        const navmesh = document.querySelector('.navmesh');
+        if (!navmesh) return;
+        const mesh = navmesh.getObject3D('mesh');
+        if (!mesh) return;
+        const intersects = raycaster.intersectObject(mesh, true);
+        if (intersects.length > 0) {
+          // Teleport cameraRig to intersection point
+          const point = intersects[0].point;
+          const cameraRig = document.getElementById('cameraRig');
+          cameraRig.setAttribute('position', `${point.x} 0 ${point.z}`);
+        }
+      }
+    });
 
     document.querySelector('a-assets').addEventListener('loaded', function () {
       // Load models from config.json only after static assets are loaded
@@ -235,6 +339,29 @@
         });
       }
     });
+
+    if (!AFRAME.primitives.primitives['a-rounded']) {
+      AFRAME.registerPrimitive('a-rounded', {
+        defaultComponents: {
+          geometry: {primitive: 'plane', width: 1, height: 1},
+          material: {color: '#222', opacity: 0.85, transparent: true, side: 'double'},
+          rounded: {radius: 0.18}
+        },
+        mappings: {
+          width: 'geometry.width',
+          height: 'geometry.height',
+          color: 'material.color',
+          opacity: 'material.opacity',
+          radius: 'rounded.radius',
+          depth: 'geometry.depth'
+        }
+      });
+      AFRAME.registerComponent('rounded', {
+        schema: {radius: {type: 'number', default: 0.1}},
+        init: function() {
+        }
+      });
+    }
   </script>
 
   <div id="dom-overlay">
@@ -282,7 +409,16 @@
     </div>
   </div>
   
-  <div class="glitchButton" style="position: absolute; top: 1em; right: 1em;"></div><script src="https://button.glitch.me/button.js"></script>
+  <script type="module">
+import { addInfoPanelsToScene } from './info-panels.js';
+
+document.addEventListener('DOMContentLoaded', function () {
+  const sceneEl = document.querySelector('a-scene');
+  sceneEl.addEventListener('loaded', function() {
+    addInfoPanelsToScene(sceneEl);
+  });
+});
+</script>
 </body>
 
 </html>
