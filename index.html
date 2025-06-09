@@ -17,6 +17,8 @@
   <script src="https://cdn.jsdelivr.net/npm/handy-work@3.1.11/build/magnet-helpers.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-htmlmesh@2.4.0/build/aframe-html.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-slice9-component@1.1.0/dist/aframe-slice9-component.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-super-hands-component@5.0.3/dist/aframe-super-hands.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
 
   <script src="components/ar-cursor.js"></script>
   <script src="components/simple-navmesh-constraint.js"></script>
@@ -70,7 +72,7 @@
       </a-entity>
       
       <!-- Below is  WIP: hand tracking -->
-      <a-entity handy-controls="right:#right-gltf;materialOverride:right;" material="color:gold;metalness:1;roughness:0;">
+      <a-entity handy-controls="right:#right-gltf;materialOverride:right;" material="color:gold;metalness:1;roughness:0;" super-hands>
         <!-- For screen space inputs like mobile AR -->
         <a-torus radius="0.008" radius-tubular="0.001" material="shader:flat;color:blue" data-none="screen-0"></a-torus>
         <a-torus radius="0.008" radius-tubular="0.001" material="shader:flat;color:green" data-none="screen-1"></a-torus>
@@ -337,6 +339,14 @@
               }
 
               entity.setAttribute('id', model.id);
+
+              // Make all models except the clothing rack grabbable and stretchable
+              if (model.id !== 'clothes-rack') {
+                entity.setAttribute('grabbable', '');
+                entity.setAttribute('stretchable', '');
+                entity.setAttribute('dynamic-body', '');
+              }
+
               // Listen for model-loaded event
               entity.addEventListener('model-loaded', () => {
                 modelsLoaded++;
