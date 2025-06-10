@@ -562,7 +562,11 @@
     }, 400);
   },
   showInfoPanel: function () {
-    if (this.infoPanel) return;
+    console.log('[reset-on-release:showInfoPanel] called for', this.el.id);
+    if (this.infoPanel) {
+      console.log('[reset-on-release:showInfoPanel] infoPanel already exists for', this.el.id);
+      return;
+    }
     // Create a simple info panel entity
     const panel = document.createElement('a-entity');
     panel.setAttribute('geometry', 'primitive: plane; width: 0.6; height: 0.25');
@@ -571,10 +575,12 @@
     let showLeft = false;
     if (this.el.hasAttribute('reset-on-release')) {
       const attr = this.el.getAttribute('reset-on-release');
+      console.log('[reset-on-release:showInfoPanel] attr for reset-on-release:', attr);
       if (typeof attr === 'string' && attr.includes('showInfoPanelLeft:true')) showLeft = true;
       if (typeof attr === 'object' && attr.showInfoPanelLeft) showLeft = true;
     }
     if (showLeft) {
+      console.log('[reset-on-release:showInfoPanel] showLeft is true, positioning panel to the left');
       panel.setAttribute('position', '-0.7 0.35 0');
       // Remove flag after use so future grabs behave normally
       if (typeof this.el.setAttribute === 'function') {
@@ -585,21 +591,26 @@
           delete attr.showInfoPanelLeft;
           this.el.setAttribute('reset-on-release', attr);
         }
+        console.log('[reset-on-release:showInfoPanel] showInfoPanelLeft flag removed after use');
       }
     } else {
+      console.log('[reset-on-release:showInfoPanel] showLeft is false, positioning panel above');
       panel.setAttribute('position', '0 0.35 0');
     }
     panel.setAttribute('text', `value: ${this.data.info}; align: center; color: #fff; width: 1.5; wrapCount: 30;`);
     panel.setAttribute('look-at', '#head');
     this.el.appendChild(panel);
     this.infoPanel = panel;
-    console.log('[reset-on-release:showInfoPanel]', this.el.id, 'showLeft:', showLeft);
+    console.log('[reset-on-release:showInfoPanel] infoPanel created and added for', this.el.id, 'showLeft:', showLeft);
   },
   hideInfoPanel: function () {
+    console.log('[reset-on-release:hideInfoPanel] called for', this.el.id);
     if (this.infoPanel) {
       this.el.removeChild(this.infoPanel);
       this.infoPanel = null;
-      console.log('[reset-on-release:hideInfoPanel]', this.el.id);
+      console.log('[reset-on-release:hideInfoPanel] infoPanel removed for', this.el.id);
+    } else {
+      console.log('[reset-on-release:hideInfoPanel] no infoPanel to remove for', this.el.id);
     }
   }
 });
