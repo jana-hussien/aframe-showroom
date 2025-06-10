@@ -348,10 +348,13 @@
 
               entity.setAttribute('id', model.id);
 
-              // Make all models except the clothing rack grabbable and stretchable
+              // Make all models except the clothing rack grabbable, stretchable, draggable, droppable
               if (model.id !== 'clothes-rack') {
                 entity.setAttribute('grabbable', '');
                 entity.setAttribute('stretchable', '');
+                entity.setAttribute('draggable', '');
+                entity.setAttribute('droppable', '');
+                entity.setAttribute('class', 'grabbable');
                 entity.setAttribute('reset-on-release', `info: ${model.name || model.id}`);
               }
 
