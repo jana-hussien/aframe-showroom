@@ -167,3 +167,57 @@ AFRAME.registerComponent('bforward-controls', {
     return velocity;
   }
 });
+
+AFRAME.registerComponent('look-grip-grab', {
+  schema: {},
+  init: function () {
+    this.gripPressed = false;
+    this.raycaster = new THREE.Raycaster();
+    this.tempVec3 = new THREE.Vector3();
+    this.handleGripDown = this.handleGripDown.bind(this);
+    this.handleGripUp = this.handleGripUp.bind(this);
+    this.el.sceneEl.addEventListener('gripdown', this.handleGripDown);
+    this.el.sceneEl.addEventListener('gripup', this.handleGripUp);
+    console.log('[look-grip-grab] Component initialized on', this.el);
+  },
+  remove: function () {
+    this.el.sceneEl.removeEventListener('gripdown', this.handleGripDown);
+    this.el.sceneEl.removeEventListener('gripup', this.handleGripUp);
+  },
+  handleGripDown: function (evt) {
+    if (this.gripPressed) return;
+    this.gripPressed = true;
+    const camera = this.el.sceneEl.camera;
+    camera.getWorldPosition(this.tempVec3);
+    const origin = this.tempVec3.clone();
+    camera.getWorldDirection(this.tempVec3);
+    const direction = this.tempVec3.clone();
+    this.raycaster.set(origin, direction);
+    // Find all grabbable models
+    const grabbables = Array.from(this.el.sceneEl.querySelectorAll('[grabbable]'));
+    const meshes = grabbables.map(e => e.getObject3D('mesh')).filter(Boolean);
+    const intersects = this.raycaster.intersectObjects(meshes, true);
+    if (intersects.length > 0) {
+      // Find the top-level entity for the hit mesh
+      let mesh = intersects[0].object;
+      let entity = null;
+      while (mesh && !entity) {
+        if (mesh.el && grabbables.includes(mesh.el)) entity = mesh.el;
+        mesh = mesh.parent;
+      }
+      if (entity) {
+        console.log('[look-grip-grab] Raycast hit grabbable entity:', entity);
+        // Set flag for info panel positioning
+        entity.setAttribute('reset-on-release', 'showInfoPanelLeft:true');
+        // Programmatically trigger grab
+        entity.emit('grab-start', {by: 'look-grip-grab'}, false);
+        entity.emit('grabbed', {by: 'look-grip-grab'}, false);
+      }
+    } else {
+      console.log('[look-grip-grab] No grabbable entity hit by raycast.');
+    }
+  },
+  handleGripUp: function () {
+    this.gripPressed = false;
+  }
+});

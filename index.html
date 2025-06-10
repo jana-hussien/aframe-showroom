@@ -367,6 +367,7 @@
                 entity.setAttribute('reset-on-release', `info: ${model.infoPanelText || model.name || model.id}`);
                 entity.setAttribute('highlight-on-hand-hover', '');
                 entity.setAttribute('sphere-collider', 'objects: [data-left$=-tip],[data-right$=-tip];');
+                entity.setAttribute('look-grip-grab', ''); // <-- Add this line
 
                 // Add two magnet handles for two-handed grab/scale
                 const handle1 = document.createElement('a-entity');
@@ -566,12 +567,33 @@
     const panel = document.createElement('a-entity');
     panel.setAttribute('geometry', 'primitive: plane; width: 0.6; height: 0.25');
     panel.setAttribute('material', 'color: #222; opacity: 0.85; side: double;');
-    panel.setAttribute('position', '0 0.35 0');
+    // Position panel left of model if showInfoPanelLeft flag is set
+    let showLeft = false;
+    if (this.el.hasAttribute('reset-on-release')) {
+      const attr = this.el.getAttribute('reset-on-release');
+      if (typeof attr === 'string' && attr.includes('showInfoPanelLeft:true')) showLeft = true;
+      if (typeof attr === 'object' && attr.showInfoPanelLeft) showLeft = true;
+    }
+    if (showLeft) {
+      panel.setAttribute('position', '-0.7 0.35 0');
+      // Remove flag after use so future grabs behave normally
+      if (typeof this.el.setAttribute === 'function') {
+        let attr = this.el.getAttribute('reset-on-release');
+        if (typeof attr === 'string') {
+          this.el.setAttribute('reset-on-release', attr.replace('showInfoPanelLeft:true', ''));
+        } else if (typeof attr === 'object') {
+          delete attr.showInfoPanelLeft;
+          this.el.setAttribute('reset-on-release', attr);
+        }
+      }
+    } else {
+      panel.setAttribute('position', '0 0.35 0');
+    }
     panel.setAttribute('text', `value: ${this.data.info}; align: center; color: #fff; width: 1.5; wrapCount: 30;`);
     panel.setAttribute('look-at', '#head');
     this.el.appendChild(panel);
     this.infoPanel = panel;
-    console.log('[reset-on-release:showInfoPanel]', this.el.id);
+    console.log('[reset-on-release:showInfoPanel]', this.el.id, 'showLeft:', showLeft);
   },
   hideInfoPanel: function () {
     if (this.infoPanel) {
