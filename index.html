@@ -44,7 +44,6 @@
     renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
     shadow="type: pcfsoft"
     xr-mode-ui="XRMode:xr"
-    obb-collider="showColliders: true"
   >
 
     <a-assets>
@@ -78,7 +77,7 @@
       </a-entity>
       
       <!-- Below is  WIP: hand tracking -->
-      <a-entity handy-controls="right:#right-gltf;materialOverride:right;" material="color:gold;metalness:1;roughness:0;" super-hands>
+      <a-entity handy-controls="right:#right-gltf;" super-hands>
         <!-- For screen space inputs like mobile AR -->
         <a-torus radius="0.008" radius-tubular="0.001" material="shader:flat;color:blue" data-none="screen-0"></a-torus>
         <a-torus radius="0.008" radius-tubular="0.001" material="shader:flat;color:green" data-none="screen-1"></a-torus>
@@ -120,9 +119,6 @@
         <a-sphere data-left="thumb-tip" radius="0.004" visible="false" physx-body="type: kinematic;"></a-sphere>
       </a-entity>
       
-      <a-entity id="leftHand" hand-tracking-grab-controls="hand: left;"></a-entity>
-      <a-entity id="rightHand" hand-tracking-grab-controls="hand: right;"></a-entity>
-
     </a-entity>
 
     <a-entity id="popup-ui" position="0 1.2 -2"></a-entity>
@@ -356,14 +352,20 @@
 
               entity.setAttribute('id', model.id);
 
-              // Make all models except the clothing rack grabbable, stretchable, draggable, droppable
-                if (!model.id.includes('clothes-rack')) {
+              // Only make models with animationType 'hover', 'rotate', or 'hoverAndRotate' interactive
+              if (
+                model.animationType === 'hover' ||
+                model.animationType === 'rotate' ||
+                model.animationType === 'hoverAndRotate'
+              ) {
                 entity.setAttribute('grabbable', '');
                 entity.setAttribute('stretchable', '');
                 entity.setAttribute('draggable', '');
                 entity.setAttribute('droppable', '');
                 entity.setAttribute('class', 'grabbable');
                 entity.setAttribute('reset-on-release', `info: ${model.name || model.id}`);
+                entity.setAttribute('highlight-on-hand-hover', '');
+                entity.setAttribute('sphere-collider', 'objects: [data-left$=-tip],[data-right$=-tip];');
               }
 
               // Listen for model-loaded event
@@ -472,6 +474,14 @@
       dur: 400,
       easing: 'easeOutCubic'
     });
+    setTimeout(() => {
+      if (this.el.hasAttribute('animation__hover')) {
+        this.el.setAttribute('animation__hover', 'enabled', true);
+      }
+      if (this.el.hasAttribute('animation__rotation')) {
+        this.el.setAttribute('animation__rotation', 'enabled', true);
+      }
+    }, 400);
   },
   showInfoPanel: function () {
     if (this.infoPanel) return;
@@ -490,6 +500,43 @@
       this.el.removeChild(this.infoPanel);
       this.infoPanel = null;
     }
+  }
+});
+
+AFRAME.registerComponent('highlight-on-hand-hover', {
+  schema: { color: {type: 'color', default: '#ffd700'} },
+  init: function () {
+    this.isHighlighted = false;
+    this.originalColor = null;
+    this.handHovering = false;
+    this.el.addEventListener('hitstart', this.onHandHoverStart.bind(this));
+    this.el.addEventListener('hitend', this.onHandHoverEnd.bind(this));
+  },
+  onHandHoverStart: function (evt) {
+    if (this.isHighlighted) return;
+    const mesh = this.el.getObject3D('mesh');
+    if (mesh) {
+      mesh.traverse(obj => {
+        if (obj.isMesh) {
+          if (!this.originalColor) this.originalColor = obj.material.color.clone();
+          obj.material.emissive = obj.material.emissive || new THREE.Color(0x000000);
+          obj.material.emissive.set(this.data.color);
+        }
+      });
+      this.isHighlighted = true;
+    }
+  },
+  onHandHoverEnd: function (evt) {
+    if (!this.isHighlighted) return;
+    const mesh = this.el.getObject3D('mesh');
+    if (mesh && this.originalColor) {
+      mesh.traverse(obj => {
+        if (obj.isMesh && obj.material.emissive) {
+          obj.material.emissive.set(0x000000);
+        }
+      });
+    }
+    this.isHighlighted = false;
   }
 });
   </script>
