@@ -77,7 +77,20 @@
         position="0 1.6 0"
       >
       </a-entity>
-      <!-- Point-to-teleport blink controls for both hands -->
+      <!-- Point-to-teleport blink controls for both hands (ensure correct setup) -->
+      <a-entity id="rightHandTeleport"
+        hand-controls="hand: right"
+        blink-controls="collisionEntities: .navmesh; cameraRig: #cameraRig; teleportOrigin: #head; startEvents: triggerdown; endEvents: triggerup; cancelEvents: gripdown; snapTurn: false; rotateOnTeleport: false;"
+        raycaster="objects: .navmesh; far: 10; showLine: true; lineColor: #00f;"
+        visible="true">
+      </a-entity>
+      <a-entity id="leftHandTeleport"
+        hand-controls="hand: left"
+        blink-controls="collisionEntities: .navmesh; cameraRig: #cameraRig; teleportOrigin: #head; startEvents: triggerdown; endEvents: triggerup; cancelEvents: gripdown; snapTurn: false; rotateOnTeleport: false;"
+        raycaster="objects: .navmesh; far: 10; showLine: true; lineColor: #00f;"
+        visible="true">
+      </a-entity>
+      <!-- Remove old blink-controls-only entities if present -->
       <a-entity data-right="index-finger-tip" mixin="blink" blink-controls="snapTurn:false;startEvents:pose_point_fuseShort;endEvents:pose_point_fuseLong;cancelEvents:pose_cancel_point;"></a-entity>
       <a-entity data-left="index-finger-tip"  mixin="blink" blink-controls="snapTurn:false;startEvents:pose_point_fuseShort;endEvents:pose_point_fuseLong;cancelEvents:pose_cancel_point;"></a-entity>
       <a-entity data-right="ray" mixin="blink" cursor="" raycaster="objects:[html];far:0.3;showLine:false;lineColor:black;">
