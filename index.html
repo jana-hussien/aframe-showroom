@@ -525,95 +525,61 @@
   },
   attachToHand: function(handEl) {
     if (!handEl) return;
-    if (this.el.parentElement !== handEl) {
-      handEl.appendChild(this.el);
-      this.el.object3D.position.set(0, 0, -0.15); // Offset in front of hand
-      this.el.object3D.rotation.set(0, 0, 0);
-      console.log('[reset-on-release:attachToHand] Attached', this.el.id, 'to', handEl.id);
-    }
+    // Preserve world transform before reparenting
+    const obj = this.el.object3D;
+    const worldPos = new THREE.Vector3();
+    const worldQuat = new THREE.Quaternion();
+    const worldScale = new THREE.Vector3();
+    obj.getWorldPosition(worldPos);
+    obj.getWorldQuaternion(worldQuat);
+    obj.getWorldScale(worldScale);
+    // Reparent
+    handEl.appendChild(this.el);
+    // Restore world transform relative to new parent
+    obj.position.copy(worldPos);
+    obj.quaternion.copy(worldQuat);
+    obj.scale.copy(worldScale);
+    obj.parent.worldToLocal(obj.position); // Convert to local
+    // Offset in front of hand
+    obj.position.set(0, 0, -0.15);
+    obj.rotation.set(0, 0, 0);
+    console.log('[reset-on-release:attachToHand] Attached', this.el.id, 'to', handEl.id, 'with preserved world transform');
   },
   detachFromHand: function() {
     const modelsRoot = document.getElementById('models-root');
     if (modelsRoot && this.el.parentElement !== modelsRoot) {
+      // Preserve world transform before reparenting
+      const obj = this.el.object3D;
+      const worldPos = new THREE.Vector3();
+      const worldQuat = new THREE.Quaternion();
+      const worldScale = new THREE.Vector3();
+      obj.getWorldPosition(worldPos);
+      obj.getWorldQuaternion(worldQuat);
+      obj.getWorldScale(worldScale);
       modelsRoot.appendChild(this.el);
-      // Restore position/rotation will be handled by resetModel
-      console.log('[reset-on-release:detachFromHand] Detached', this.el.id, 'to models-root');
+      // Restore world transform relative to new parent
+      obj.position.copy(worldPos);
+      obj.quaternion.copy(worldQuat);
+      obj.scale.copy(worldScale);
+      obj.parent.worldToLocal(obj.position);
+      console.log('[reset-on-release:detachFromHand] Detached', this.el.id, 'to models-root with preserved world transform');
     }
-  },
-  setControllersVisible: function(visible) {
-    const leftHand = document.getElementById('left-hand');
-    const rightHand = document.getElementById('right-hand');
-    if (leftHand) leftHand.object3D.visible = visible;
-    if (rightHand) rightHand.object3D.visible = visible;
-    console.log('[reset-on-release:setControllersVisible]', visible);
-  },
-  onGrabbed: function(evt) {
-    this.grabCount = (this.grabCount || 0) + 1;
-    console.log('[reset-on-release:onGrabbed]', this.el.id, 'grabCount:', this.grabCount, evt);
-    this.pauseAnimations();
-    this.showInfoPanel(); // Always show info panel on any grab
-  },
-  onReleased: function(evt) {
-    this.grabCount = Math.max(0, (this.grabCount || 1) - 1);
-    console.log('[reset-on-release:onReleased]', this.el.id, 'grabCount:', this.grabCount, evt);
-    if (this.grabCount === 0) {
-      this.hideInfoPanel(); // Hide info panel when all grabs released
-      if (!this.grabbed) {
-        this.resetModel();
-      }
-    }
-  },
-  pauseAnimations: function () {
-    let hover = this.el.hasAttribute('animation__hover');
-    let rot = this.el.hasAttribute('animation__rotation');
-    console.log('[reset-on-release:pauseAnimations]', this.el.id, 'hover:', hover, 'rot:', rot);
-    if (hover) {
-      this.el.setAttribute('animation__hover', 'enabled', false);
-      console.log('[reset-on-release:pauseAnimations] animation__hover paused');
-    }
-    if (rot) {
-      this.el.setAttribute('animation__rotation', 'enabled', false);
-      console.log('[reset-on-release:pauseAnimations] animation__rotation paused');
-    }
-  },
-  resetModel: function () {
-    console.log('[reset-on-release:resetModel]', this.el.id, 'Resetting to', this.originalPosition, this.originalScale);
-    // Animate back to original position/scale
-    this.el.setAttribute('animation__resetpos', {
-      property: 'position',
-      to: `${this.originalPosition.x} ${this.originalPosition.y} ${this.originalPosition.z}`,
-      dur: 400,
-      easing: 'easeOutCubic'
-    });
-    this.el.setAttribute('animation__resetscale', {
-      property: 'scale',
-      to: `${this.originalScale.x} ${this.originalScale.y} ${this.originalScale.z}`,
-      dur: 400,
-      easing: 'easeOutCubic'
-    });
-    setTimeout(() => {
-      if (this.el.hasAttribute('animation__hover')) {
-        this.el.setAttribute('animation__hover', 'enabled', true);
-        console.log('[reset-on-release:resetModel] animation__hover resumed');
-      }
-      if (this.el.hasAttribute('animation__rotation')) {
-        this.el.setAttribute('animation__rotation', 'enabled', true);
-        console.log('[reset-on-release:resetModel] animation__rotation resumed');
-      }
-    }, 400);
   },
   showInfoPanel: function () {
     console.log('[reset-on-release:showInfoPanel] called for', this.el.id);
     if (this.infoPanel) {
+      this.infoPanel.setAttribute('visible', true);
       console.log('[reset-on-release:showInfoPanel] infoPanel already exists for', this.el.id);
       return;
     }
-    // Create a styled info panel entity (title + description)
+    // Create a styled info panel entity (Hello WebXR style)
     const panel = document.createElement('a-entity');
     panel.setAttribute('geometry', 'primitive: plane; width: 0.7; height: 0.32');
-    panel.setAttribute('material', 'color: #222; opacity: 0.92; side: double;');
-    panel.setAttribute('slice9', 'src: #panel-texture; color: #222; opacity: 0.92; left:0.08; right:0.08; top:0.18; bottom:0.18;');
-    // Title (model name)
+    panel.setAttribute('material', 'color: #222; opacity: 0.96; side: double;');
+    panel.setAttribute('slice9', 'src: #panel-texture; color: #222; opacity: 0.96; left:0.08; right:0.08; top:0.18; bottom:0.18;');
+    panel.setAttribute('rounded', 'radius: 0.18');
+    panel.setAttribute('visible', true);
+    // Title (model name, large, bold)
     const title = document.createElement('a-entity');
     title.setAttribute('text', {
       value: this.el.id ? this.el.id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Model',
@@ -624,65 +590,47 @@
       baseline: 'top',
       font: 'https://cdn.jsdelivr.net/gh/etiennepinchon/aframe-fonts/Roboto-msdf.json',
       shader: 'msdf',
-      zOffset: 0.01
+      zOffset: 0.01,
+      weight: 'bold',
+      letterSpacing: 2
     });
     title.setAttribute('position', '0 0.09 0.01');
     panel.appendChild(title);
-    // Description (infoPanelText)
+    // Description (infoPanelText, smaller)
     const desc = document.createElement('a-entity');
     desc.setAttribute('text', {
       value: this.data.info || '',
       align: 'center',
       color: '#fff',
-      width: 1.2,
+      width: 1.1,
       wrapCount: 32,
       baseline: 'top',
       font: 'https://cdn.jsdelivr.net/gh/etiennepinchon/aframe-fonts/Roboto-msdf.json',
       shader: 'msdf',
-      zOffset: 0.01
+      zOffset: 0.01,
+      fontSize: 0.045
     });
     desc.setAttribute('position', '0 -0.06 0.01');
     panel.appendChild(desc);
-    // Optionally, add a close button or icon here
-    // Position panel left of model if showInfoPanelLeft flag is set
-    let showLeft = false;
-    if (this.el.hasAttribute('reset-on-release')) {
-      const attr = this.el.getAttribute('reset-on-release');
-      console.log('[reset-on-release:showInfoPanel] attr for reset-on-release:', attr);
-      if (typeof attr === 'string' && attr.includes('showInfoPanelLeft:true')) showLeft = true;
-      if (typeof attr === 'object' && attr.showInfoPanelLeft) showLeft = true;
-    }
-    if (showLeft) {
-      console.log('[reset-on-release:showInfoPanel] showLeft is true, positioning panel to the left');
-      panel.setAttribute('position', '-0.7 0.35 0');
-      // Remove flag after use so future grabs behave normally
-      if (typeof this.el.setAttribute === 'function') {
-        let attr = this.el.getAttribute('reset-on-release');
-        if (typeof attr === 'string') {
-          this.el.setAttribute('reset-on-release', attr.replace('showInfoPanelLeft:true', ''));
-        } else if (typeof attr === 'object') {
-          delete attr.showInfoPanelLeft;
-          this.el.setAttribute('reset-on-release', attr);
-        }
-        console.log('[reset-on-release:showInfoPanel] showInfoPanelLeft flag removed after use');
-      }
-    } else {
-      console.log('[reset-on-release:showInfoPanel] showLeft is false, positioning panel above');
-      panel.setAttribute('position', '0 0.35 0');
-    }
+    // Panel position: always above model
+    panel.setAttribute('position', '0 0.35 0');
     panel.setAttribute('look-at', '#head');
+    // Add drop shadow effect (optional, for Hello WebXR look)
+    panel.setAttribute('shadow', 'receive: false; cast: false;');
+    // Add to model entity
     this.el.appendChild(panel);
     this.infoPanel = panel;
-    console.log('[reset-on-release:showInfoPanel] infoPanel created and added for', this.el.id, 'showLeft:', showLeft);
+    console.log('[reset-on-release:showInfoPanel] infoPanel created and added for', this.el.id);
   },
   hideInfoPanel: function () {
     console.log('[reset-on-release:hideInfoPanel] called for', this.el.id);
     if (this.infoPanel) {
-      this.el.removeChild(this.infoPanel);
-      this.infoPanel = null;
-      console.log('[reset-on-release:hideInfoPanel] infoPanel removed for', this.el.id);
+      this.infoPanel.setAttribute('visible', false);
+      // Optionally, remove from DOM: this.el.removeChild(this.infoPanel);
+      // this.infoPanel = null;
+      console.log('[reset-on-release:hideInfoPanel] infoPanel hidden for', this.el.id);
     } else {
-      console.log('[reset-on-release:hideInfoPanel] no infoPanel to remove for', this.el.id);
+      console.log('[reset-on-release:hideInfoPanel] no infoPanel to hide for', this.el.id);
     }
   }
 });
