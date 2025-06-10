@@ -473,36 +473,47 @@
     el.addEventListener('grab-end', this.onGrabEnd.bind(this));
     el.addEventListener('magnetstart', this.onMagnetStart.bind(this));
     el.addEventListener('magnetend', this.onMagnetEnd.bind(this));
+    console.log('[reset-on-release:init]', el.id, 'originalPosition', this.originalPosition, 'originalScale', this.originalScale);
   },
-  onGrabStart: function () {
+  onGrabStart: function (evt) {
     this.grabbed = true;
+    console.log('[reset-on-release:onGrabStart]', this.el.id, evt);
     this.pauseAnimations();
     this.showInfoPanel();
   },
-  onGrabEnd: function () {
+  onGrabEnd: function (evt) {
     this.grabbed = false;
+    console.log('[reset-on-release:onGrabEnd]', this.el.id, evt);
     this.hideInfoPanel();
     this.resetModel();
   },
-  onMagnetStart: function () {
+  onMagnetStart: function (evt) {
     this.magnetCount = (this.magnetCount || 0) + 1;
+    console.log('[reset-on-release:onMagnetStart]', this.el.id, 'magnetCount:', this.magnetCount, evt);
     this.pauseAnimations();
   },
-  onMagnetEnd: function () {
+  onMagnetEnd: function (evt) {
     this.magnetCount = Math.max(0, (this.magnetCount || 1) - 1);
+    console.log('[reset-on-release:onMagnetEnd]', this.el.id, 'magnetCount:', this.magnetCount, evt);
     if (this.magnetCount === 0 && !this.grabbed) {
       this.resetModel();
     }
   },
   pauseAnimations: function () {
-    if (this.el.hasAttribute('animation__hover')) {
+    let hover = this.el.hasAttribute('animation__hover');
+    let rot = this.el.hasAttribute('animation__rotation');
+    console.log('[reset-on-release:pauseAnimations]', this.el.id, 'hover:', hover, 'rot:', rot);
+    if (hover) {
       this.el.setAttribute('animation__hover', 'enabled', false);
+      console.log('[reset-on-release:pauseAnimations] animation__hover paused');
     }
-    if (this.el.hasAttribute('animation__rotation')) {
+    if (rot) {
       this.el.setAttribute('animation__rotation', 'enabled', false);
+      console.log('[reset-on-release:pauseAnimations] animation__rotation paused');
     }
   },
   resetModel: function () {
+    console.log('[reset-on-release:resetModel]', this.el.id, 'Resetting to', this.originalPosition, this.originalScale);
     // Animate back to original position/scale
     this.el.setAttribute('animation__resetpos', {
       property: 'position',
@@ -519,9 +530,11 @@
     setTimeout(() => {
       if (this.el.hasAttribute('animation__hover')) {
         this.el.setAttribute('animation__hover', 'enabled', true);
+        console.log('[reset-on-release:resetModel] animation__hover resumed');
       }
       if (this.el.hasAttribute('animation__rotation')) {
         this.el.setAttribute('animation__rotation', 'enabled', true);
+        console.log('[reset-on-release:resetModel] animation__rotation resumed');
       }
     }, 400);
   },
@@ -536,11 +549,13 @@
     panel.setAttribute('look-at', '#head');
     this.el.appendChild(panel);
     this.infoPanel = panel;
+    console.log('[reset-on-release:showInfoPanel]', this.el.id);
   },
   hideInfoPanel: function () {
     if (this.infoPanel) {
       this.el.removeChild(this.infoPanel);
       this.infoPanel = null;
+      console.log('[reset-on-release:hideInfoPanel]', this.el.id);
     }
   }
 });
