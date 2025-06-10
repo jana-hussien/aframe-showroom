@@ -72,11 +72,11 @@
       <a-entity id="head"
         camera="near:0.01;"
         look-controls="pointerLockEnabled: true"
-        position="0 1.65 0"
+        position="0 1.6 0"
       >
         <!-- VR/AR controller ray cursors -->
-        <a-entity laser-controls="hand: left" raycaster="objects: .close-x-btn, .back-to-main-panel, [raycast-intersectable]; showLine: true; lineColor: #ff4081;" line="color: #ff4081; opacity: 0.8;" cursor="rayOrigin: controller; fuse: false"></a-entity>
-        <a-entity laser-controls="hand: right" raycaster="objects: .close-x-btn, .back-to-main-panel, [raycast-intersectable]; showLine: true; lineColor: #ff4081;" line="color: #ff4081; opacity: 0.8;" cursor="rayOrigin: controller; fuse: false"></a-entity>
+        <a-entity laser-controls="hand: left" raycaster="objects: .close-x-btn, .back-to-main-panel, [raycast-intersectable]; showLine: true; lineColor: #ff4081;" line="color: #ff4081; opacity: 0.8;" cursor="rayOrigin: controller; fuse: false" position="0 -0.07 0"></a-entity>
+        <a-entity laser-controls="hand: right" raycaster="objects: .close-x-btn, .back-to-main-panel, [raycast-intersectable]; showLine: true; lineColor: #ff4081;" line="color: #ff4081; opacity: 0.8;" cursor="rayOrigin: controller; fuse: false" position="0 -0.07 0"></a-entity>
       </a-entity>
       
       <!-- Below is  WIP: hand tracking -->
@@ -106,7 +106,7 @@
         <a-entity id="right-magnet" data-right="grip" data-magnet="magnet-right" grab-magnet-target="startEvents:squeezestart,pose_fist;stopEvents:pose_flat_fuseShort,squeezeend;noMagnetEl:#right-no-magnet;"></a-entity>
         <!-- markers to let us know the real location of the hands, you probably want to make them visible="false" or just make them empty <a-entities> -->
         <a-entity id="left-no-magnet" data-left="grip" data-no-magnet>
-          <a-entity html="html:#my-interface;cursor:#cursor" position="0.06 0.02 0.04" rotation="-60 90 0" scale="1.2 1.2 1.2"></a-entity>
+          <a-entity html="html:#my-interface;cursor:#cursor" position="0.06 0.02 0.04" rotation="0 90 -30" scale="0.7 0.7 0.7"></a-entity>
         </a-entity>
         <a-entity id="right-no-magnet" data-right="grip" data-no-magnet></a-entity>
         <!-- Invisible objects at the tips of each finger for physics or intersections -->
