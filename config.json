@@ -4,35 +4,40 @@
     "path": "assets/models/heart-necklace.glb",
     "position": "1 0.8 0",
     "height": 0.6,
-    "animationType": "hoverAndRotate"
+    "animationType": "hoverAndRotate",
+    "infoPanelText": "A beautiful heart-shaped necklace, perfect for any occasion."
   },
   {
     "id": "cream",
     "path": "assets/models/cream.glb",
     "position": "-1 0.8 0",
     "height": 0.3,
-    "animationType": "hoverAndRotate"
+    "animationType": "hoverAndRotate",
+    "infoPanelText": "Luxurious moisturizing cream for daily skincare."
   },
   {
     "id": "bag",
     "path": "assets/models/bag.glb",
     "position": "0 0.8 4",
     "height": 0.5,
-    "animationType": "hoverAndRotate"
+    "animationType": "hoverAndRotate",
+    "infoPanelText": "Trendy and spacious bag, ideal for travel or everyday use."
   },
   {
     "id": "velcro-shoe",
     "path": "assets/models/velcro-shoe.glb",
     "position": "0 0.8 -4",
     "height": 0.5,
-    "animationType": "hoverAndRotate"
+    "animationType": "hoverAndRotate",
+    "infoPanelText": "Comfortable velcro shoes for easy wear and style."
   },
   {
     "id": "jeans",
     "path": "assets/models/jeans/glb",
     "position": "5 0.8 0",
     "height": 0.5,
-    "animationType": "hoverAndRotate"
+    "animationType": "hoverAndRotate",
+    "infoPanelText": "Classic blue jeans, a wardrobe essential."
   },
   {
     "id": "clothes-rack",

@@ -364,7 +364,7 @@
                 entity.setAttribute('draggable', '');
                 entity.setAttribute('droppable', '');
                 entity.setAttribute('class', 'grabbable');
-                entity.setAttribute('reset-on-release', `info: ${model.name || model.id}`);
+                entity.setAttribute('reset-on-release', `info: ${model.infoPanelText || model.name || model.id}`);
                 entity.setAttribute('highlight-on-hand-hover', '');
                 entity.setAttribute('sphere-collider', 'objects: [data-left$=-tip],[data-right$=-tip];');
 
@@ -467,12 +467,12 @@
     this.originalScale = el.getAttribute('scale') || {x:1, y:1, z:1};
     this.infoPanel = null;
     this.grabbed = false;
-    this.magnetCount = 0; // Track number of active magnets
-    // Listen for grab and magnet events
+    this.grabCount = 0; // Track number of active grabs (for two-handed)
+    // Listen for grab and release events (super-hands/handy-controls)
     el.addEventListener('grab-start', this.onGrabStart.bind(this));
     el.addEventListener('grab-end', this.onGrabEnd.bind(this));
-    el.addEventListener('magnetstart', this.onMagnetStart.bind(this));
-    el.addEventListener('magnetend', this.onMagnetEnd.bind(this));
+    el.addEventListener('grabbed', this.onGrabbed.bind(this));
+    el.addEventListener('released', this.onReleased.bind(this));
     console.log('[reset-on-release:init]', el.id, 'originalPosition', this.originalPosition, 'originalScale', this.originalScale);
   },
   onGrabStart: function (evt) {
@@ -487,16 +487,20 @@
     this.hideInfoPanel();
     this.resetModel();
   },
-  onMagnetStart: function (evt) {
-    this.magnetCount = (this.magnetCount || 0) + 1;
-    console.log('[reset-on-release:onMagnetStart]', this.el.id, 'magnetCount:', this.magnetCount, evt);
+  onGrabbed: function(evt) {
+    this.grabCount = (this.grabCount || 0) + 1;
+    console.log('[reset-on-release:onGrabbed]', this.el.id, 'grabCount:', this.grabCount, evt);
     this.pauseAnimations();
+    this.showInfoPanel(); // Always show info panel on any grab
   },
-  onMagnetEnd: function (evt) {
-    this.magnetCount = Math.max(0, (this.magnetCount || 1) - 1);
-    console.log('[reset-on-release:onMagnetEnd]', this.el.id, 'magnetCount:', this.magnetCount, evt);
-    if (this.magnetCount === 0 && !this.grabbed) {
-      this.resetModel();
+  onReleased: function(evt) {
+    this.grabCount = Math.max(0, (this.grabCount || 1) - 1);
+    console.log('[reset-on-release:onReleased]', this.el.id, 'grabCount:', this.grabCount, evt);
+    if (this.grabCount === 0) {
+      this.hideInfoPanel(); // Hide info panel when all grabs released
+      if (!this.grabbed) {
+        this.resetModel();
+      }
     }
   },
   pauseAnimations: function () {
