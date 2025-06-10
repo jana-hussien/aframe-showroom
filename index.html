@@ -44,6 +44,7 @@
     renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
     shadow="type: pcfsoft"
     xr-mode-ui="XRMode:xr"
+    obb-collider="showColliders: true"
   >
 
     <a-assets>
@@ -119,6 +120,9 @@
         <a-sphere data-left="thumb-tip" radius="0.004" visible="false" physx-body="type: kinematic;"></a-sphere>
       </a-entity>
       
+      <a-entity id="leftHand" hand-tracking-grab-controls="hand: left;"></a-entity>
+      <a-entity id="rightHand" hand-tracking-grab-controls="hand: right;"></a-entity>
+
     </a-entity>
 
     <a-entity id="popup-ui" position="0 1.2 -2"></a-entity>

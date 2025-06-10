@@ -21,6 +21,14 @@
     "animationType": "hoverAndRotate"
   },
   {
+    "id": "velcro-shoe",
+    "modelId": "velcro-shoe",
+    "path": "assets/models/clothes-rack.glb",
+    "position": "0 0.8 -4",
+    "height": 0.5,
+    "animationType": "hoverAndRotate"
+  },
+  {
     "id": "clothes-rack",
     "modelId": "clothes-rack",
     "path": "assets/models/clothes-rack.glb",
