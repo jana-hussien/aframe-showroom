@@ -14,17 +14,23 @@
     "animationType": "hoverAndRotate"
   },
   {
-    "id": "jeans",
-    "path": "assets/models/jeans.glb",
+    "id": "bag",
+    "path": "assets/models/bag.glb",
     "position": "0 0.8 4",
     "height": 1,
     "animationType": "hoverAndRotate"
   },
   {
     "id": "velcro-shoe",
-    "modelId": "velcro-shoe",
-    "path": "assets/models/clothes-rack.glb",
+    "path": "assets/models/velcro-shoe.glb",
     "position": "0 0.8 -4",
+    "height": 0.5,
+    "animationType": "hoverAndRotate"
+  },
+  {
+    "id": "jeans",
+    "path": "assets/models/jeans/glb",
+    "position": "5 0.8 0",
     "height": 0.5,
     "animationType": "hoverAndRotate"
   },
