@@ -22,6 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/aframe-slice9-component@1.1.0/dist/aframe-slice9-component.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-super-hands-component@5.0.3/dist/aframe-super-hands.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
 
   <script src="components/ar-cursor.js"></script>
   <script src="components/simple-navmesh-constraint.js"></script>
@@ -44,6 +45,7 @@
     shadow="type: pcfsoft"
     xr-mode-ui="XRMode:xr"
   >
+
     <a-assets>
       <a-asset-item id="navmesh-glb" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/environment/navmesh.glb"></a-asset-item>
       <a-asset-item id="environment-gltf" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/environment/scene.gltf"></a-asset-item>
@@ -52,10 +54,13 @@
       <a-mixin id="handle-visual" geometry="width:0.05;height:0.05;depth:0.2"></a-mixin>
       <img id="panel-texture" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/panel-bg.png" crossorigin="anonymous">
       <img id="x-mark" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/x-mark.png" crossorigin="anonymous">
+      <img id="logo-img" src="assets/logo.png" crossorigin="anonymous">
     </a-assets>
 
     <a-gltf-model src="#environment-gltf" material="side:front"></a-gltf-model>
     <a-gltf-model class="navmesh" src="#navmesh-glb" visible="false"></a-gltf-model>
+    <a-image id="logo-entity" src="#logo-img" position="0 1.7 0" width="0.8" look-at="#head"></a-image>
+    <a-light type="point" intensity="2" distance="8" decay="2" color="#fff" position="0 2 0"></a-light>
     <a-entity id="models-root"></a-entity>
     <a-entity
       id="cameraRig"
@@ -116,10 +121,11 @@
         <a-sphere data-left="pinky-finger-tip" radius="0.004" visible="false" physx-body="type: kinematic;"></a-sphere>
         <a-sphere data-left="thumb-tip" radius="0.004" visible="false" physx-body="type: kinematic;"></a-sphere>
       </a-entity>
+      
     </a-entity>
-    <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
 
     <a-entity id="popup-ui" position="0 1.2 -2"></a-entity>
+
   </a-scene>
 
   <div id="loading-screen" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#222;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;font-size:2em;">
