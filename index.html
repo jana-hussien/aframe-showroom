@@ -499,12 +499,53 @@
     console.log('[reset-on-release:onGrabStart]', this.el.id, evt);
     this.pauseAnimations();
     this.showInfoPanel(); // Always show info panel on grab-start
+    // Make model follow the grabbing hand/controller
+    if (evt && evt.detail && evt.detail.hand) {
+      this.attachToHand(evt.detail.hand);
+    } else if (evt && evt.detail && evt.detail.by && evt.detail.by.object3D) {
+      this.attachToHand(evt.detail.by);
+    } else {
+      // Try to find the first visible hand
+      const leftHand = document.getElementById('left-hand');
+      const rightHand = document.getElementById('right-hand');
+      const hand = (leftHand && leftHand.object3D.visible) ? leftHand : rightHand;
+      if (hand) this.attachToHand(hand);
+    }
+    // Hide controllers (make invisible but keep in scene)
+    this.setControllersVisible(false);
   },
   onGrabEnd: function (evt) {
     this.grabbed = false;
     console.log('[reset-on-release:onGrabEnd]', this.el.id, evt);
-    // Do not hide info panel here; only hide on released
     this.resetModel();
+    // Restore controllers visibility
+    this.setControllersVisible(true);
+    // Detach from hand (restore to scene root)
+    this.detachFromHand();
+  },
+  attachToHand: function(handEl) {
+    if (!handEl) return;
+    if (this.el.parentElement !== handEl) {
+      handEl.appendChild(this.el);
+      this.el.object3D.position.set(0, 0, -0.15); // Offset in front of hand
+      this.el.object3D.rotation.set(0, 0, 0);
+      console.log('[reset-on-release:attachToHand] Attached', this.el.id, 'to', handEl.id);
+    }
+  },
+  detachFromHand: function() {
+    const modelsRoot = document.getElementById('models-root');
+    if (modelsRoot && this.el.parentElement !== modelsRoot) {
+      modelsRoot.appendChild(this.el);
+      // Restore position/rotation will be handled by resetModel
+      console.log('[reset-on-release:detachFromHand] Detached', this.el.id, 'to models-root');
+    }
+  },
+  setControllersVisible: function(visible) {
+    const leftHand = document.getElementById('left-hand');
+    const rightHand = document.getElementById('right-hand');
+    if (leftHand) leftHand.object3D.visible = visible;
+    if (rightHand) rightHand.object3D.visible = visible;
+    console.log('[reset-on-release:setControllersVisible]', visible);
   },
   onGrabbed: function(evt) {
     this.grabCount = (this.grabCount || 0) + 1;
@@ -567,10 +608,42 @@
       console.log('[reset-on-release:showInfoPanel] infoPanel already exists for', this.el.id);
       return;
     }
-    // Create a simple info panel entity
+    // Create a styled info panel entity (title + description)
     const panel = document.createElement('a-entity');
-    panel.setAttribute('geometry', 'primitive: plane; width: 0.6; height: 0.25');
-    panel.setAttribute('material', 'color: #222; opacity: 0.85; side: double;');
+    panel.setAttribute('geometry', 'primitive: plane; width: 0.7; height: 0.32');
+    panel.setAttribute('material', 'color: #222; opacity: 0.92; side: double;');
+    panel.setAttribute('slice9', 'src: #panel-texture; color: #222; opacity: 0.92; left:0.08; right:0.08; top:0.18; bottom:0.18;');
+    // Title (model name)
+    const title = document.createElement('a-entity');
+    title.setAttribute('text', {
+      value: this.el.id ? this.el.id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Model',
+      align: 'center',
+      color: '#fff',
+      width: 1.2,
+      wrapCount: 18,
+      baseline: 'top',
+      font: 'https://cdn.jsdelivr.net/gh/etiennepinchon/aframe-fonts/Roboto-msdf.json',
+      shader: 'msdf',
+      zOffset: 0.01
+    });
+    title.setAttribute('position', '0 0.09 0.01');
+    panel.appendChild(title);
+    // Description (infoPanelText)
+    const desc = document.createElement('a-entity');
+    desc.setAttribute('text', {
+      value: this.data.info || '',
+      align: 'center',
+      color: '#fff',
+      width: 1.2,
+      wrapCount: 32,
+      baseline: 'top',
+      font: 'https://cdn.jsdelivr.net/gh/etiennepinchon/aframe-fonts/Roboto-msdf.json',
+      shader: 'msdf',
+      zOffset: 0.01
+    });
+    desc.setAttribute('position', '0 -0.06 0.01');
+    panel.appendChild(desc);
+    // Optionally, add a close button or icon here
     // Position panel left of model if showInfoPanelLeft flag is set
     let showLeft = false;
     if (this.el.hasAttribute('reset-on-release')) {
@@ -597,7 +670,6 @@
       console.log('[reset-on-release:showInfoPanel] showLeft is false, positioning panel above');
       panel.setAttribute('position', '0 0.35 0');
     }
-    panel.setAttribute('text', `value: ${this.data.info}; align: center; color: #fff; width: 1.5; wrapCount: 30;`);
     panel.setAttribute('look-at', '#head');
     this.el.appendChild(panel);
     this.infoPanel = panel;
