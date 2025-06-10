@@ -311,9 +311,11 @@
           }
           models.forEach(model => {
             try {
-              console.log(`Loading model: ${model.id} (${model.path})`);
+              console.log(`Loading model: ${model.id}`);
               const entity = document.createElement('a-entity');
-              entity.setAttribute('gltf-model', model.path);
+              // Construct the CDN URL using the model id
+              const modelUrl = `https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/${model.id}.glb`;
+              entity.setAttribute('gltf-model', modelUrl);
               entity.setAttribute('position', model.position);
 
               // Hover animation
