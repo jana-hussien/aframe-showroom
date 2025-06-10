@@ -1,20 +1,27 @@
 [
   {
-    "id": "model1",
-    "path": "assets/models/shoe3/scene.gltf",
-    "position": "0 1.3 0",
-    "height": 0.2,
+    "id": "heart-necklace",
+    "path": "assets/models/heart-necklace.glb",
+    "position": "1 0.8 0",
+    "height": 0.6,
     "animationType": "hoverAndRotate"
   },
   {
-    "id": "model2",
-    "path": "assets/models/shoe2/scene.gltf",
-    "position": "-2 1 0",
-    "height": 0.2,
+    "id": "cream",
+    "path": "assets/models/cream.glb",
+    "position": "-1 0.8 0",
+    "height": 0.3,
     "animationType": "hoverAndRotate"
   },
   {
-    "id": "model3",
+    "id": "jeans",
+    "path": "assets/models/jeans.glb",
+    "position": "0 0.8 4",
+    "height": 1,
+    "animationType": "hoverAndRotate"
+  },
+  {
+    "id": "clothes-rack",
     "path": "assets/models/clothes-rack.glb",
     "position": "0 0.8 5",
     "height": 3,
