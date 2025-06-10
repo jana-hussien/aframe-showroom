@@ -74,9 +74,6 @@
         look-controls="pointerLockEnabled: true"
         position="0 1.6 0"
       >
-        <!-- VR/AR controller ray cursors -->
-        <a-entity laser-controls="hand: left" raycaster="objects: .close-x-btn, .back-to-main-panel, [raycast-intersectable]; showLine: true; lineColor: #ff4081;" line="color: #ff4081; opacity: 0.8;" cursor="rayOrigin: controller; fuse: false" position="0 -0.07 0"></a-entity>
-        <a-entity laser-controls="hand: right" raycaster="objects: .close-x-btn, .back-to-main-panel, [raycast-intersectable]; showLine: true; lineColor: #ff4081;" line="color: #ff4081; opacity: 0.8;" cursor="rayOrigin: controller; fuse: false" position="0 -0.07 0"></a-entity>
       </a-entity>
       
       <!-- Below is  WIP: hand tracking -->
@@ -355,7 +352,7 @@
               if (model.id !== 'clothes-rack') {
                 entity.setAttribute('grabbable', '');
                 entity.setAttribute('stretchable', '');
-                // entity.setAttribute('dynamic-body', ''); 
+                entity.setAttribute('reset-on-release', `info: ${model.name || model.id}`);
               }
 
               // Listen for model-loaded event
@@ -429,6 +426,61 @@
         }
       });
     }
+
+    AFRAME.registerComponent('reset-on-release', {
+  schema: {
+    info: {type: 'string', default: ''}
+  },
+  init: function () {
+    const el = this.el;
+    this.originalPosition = el.getAttribute('position');
+    this.originalScale = el.getAttribute('scale') || {x:1, y:1, z:1};
+    this.infoPanel = null;
+    this.grabbed = false;
+    // Listen for grab events
+    el.addEventListener('grab-start', this.onGrabStart.bind(this));
+    el.addEventListener('grab-end', this.onGrabEnd.bind(this));
+  },
+  onGrabStart: function () {
+    this.grabbed = true;
+    this.showInfoPanel();
+  },
+  onGrabEnd: function () {
+    this.grabbed = false;
+    this.hideInfoPanel();
+    // Animate back to original position/scale
+    this.el.setAttribute('animation__resetpos', {
+      property: 'position',
+      to: `${this.originalPosition.x} ${this.originalPosition.y} ${this.originalPosition.z}`,
+      dur: 400,
+      easing: 'easeOutCubic'
+    });
+    this.el.setAttribute('animation__resetscale', {
+      property: 'scale',
+      to: `${this.originalScale.x} ${this.originalScale.y} ${this.originalScale.z}`,
+      dur: 400,
+      easing: 'easeOutCubic'
+    });
+  },
+  showInfoPanel: function () {
+    if (this.infoPanel) return;
+    // Create a simple info panel entity
+    const panel = document.createElement('a-entity');
+    panel.setAttribute('geometry', 'primitive: plane; width: 0.6; height: 0.25');
+    panel.setAttribute('material', 'color: #222; opacity: 0.85; side: double;');
+    panel.setAttribute('position', '0 0.35 0');
+    panel.setAttribute('text', `value: ${this.data.info}; align: center; color: #fff; width: 1.5; wrapCount: 30;`);
+    panel.setAttribute('look-at', '#head');
+    this.el.appendChild(panel);
+    this.infoPanel = panel;
+  },
+  hideInfoPanel: function () {
+    if (this.infoPanel) {
+      this.el.removeChild(this.infoPanel);
+      this.infoPanel = null;
+    }
+  }
+});
   </script>
 
   <div id="dom-overlay">
