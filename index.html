@@ -467,17 +467,42 @@
     this.originalScale = el.getAttribute('scale') || {x:1, y:1, z:1};
     this.infoPanel = null;
     this.grabbed = false;
-    // Listen for grab events
+    this.magnetCount = 0; // Track number of active magnets
+    // Listen for grab and magnet events
     el.addEventListener('grab-start', this.onGrabStart.bind(this));
     el.addEventListener('grab-end', this.onGrabEnd.bind(this));
+    el.addEventListener('magnetstart', this.onMagnetStart.bind(this));
+    el.addEventListener('magnetend', this.onMagnetEnd.bind(this));
   },
   onGrabStart: function () {
     this.grabbed = true;
+    this.pauseAnimations();
     this.showInfoPanel();
   },
   onGrabEnd: function () {
     this.grabbed = false;
     this.hideInfoPanel();
+    this.resetModel();
+  },
+  onMagnetStart: function () {
+    this.magnetCount = (this.magnetCount || 0) + 1;
+    this.pauseAnimations();
+  },
+  onMagnetEnd: function () {
+    this.magnetCount = Math.max(0, (this.magnetCount || 1) - 1);
+    if (this.magnetCount === 0 && !this.grabbed) {
+      this.resetModel();
+    }
+  },
+  pauseAnimations: function () {
+    if (this.el.hasAttribute('animation__hover')) {
+      this.el.setAttribute('animation__hover', 'enabled', false);
+    }
+    if (this.el.hasAttribute('animation__rotation')) {
+      this.el.setAttribute('animation__rotation', 'enabled', false);
+    }
+  },
+  resetModel: function () {
     // Animate back to original position/scale
     this.el.setAttribute('animation__resetpos', {
       property: 'position',
