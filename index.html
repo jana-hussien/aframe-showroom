@@ -310,10 +310,14 @@
             try {
               console.log(`Loading model: ${model.id}`);
               const entity = document.createElement('a-entity');
-              // Construct the CDN URL using the model id
-              const modelUrl = `https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/${model.id}.glb`;
+              // Use model.modelId for the CDN filename if present, else model.id
+              const modelFileId = model.modelId || model.id;
+              const modelUrl = `https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/${modelFileId}.glb`;
               entity.setAttribute('gltf-model', modelUrl);
               entity.setAttribute('position', model.position);
+              if (model.rotation) {
+                entity.setAttribute('rotation', model.rotation);
+              }
 
               // Hover animation
               if (model.animationType === 'hover' || model.animationType === 'hoverAndRotate') {
@@ -349,7 +353,7 @@
               entity.setAttribute('id', model.id);
 
               // Make all models except the clothing rack grabbable, stretchable, draggable, droppable
-              if (model.id !== 'clothes-rack') {
+                if (!model.id.includes('clothes-rack')) {
                 entity.setAttribute('grabbable', '');
                 entity.setAttribute('stretchable', '');
                 entity.setAttribute('draggable', '');

@@ -22,8 +22,28 @@
   },
   {
     "id": "clothes-rack",
+    "modelId": "clothes-rack",
     "path": "assets/models/clothes-rack.glb",
     "position": "0 0.8 5",
+    "rotation": "0 30 0",
+    "height": 3,
+    "animationType": "None"
+  },
+  {
+    "id": "clothes-rack-2",
+    "modelId": "clothes-rack",
+    "path": "assets/models/clothes-rack.glb",
+    "position": "0 0.8 -5",
+    "rotation": "0 210 0",
+    "height": 3,
+    "animationType": "None"
+  },
+  {
+    "id": "clothes-rack-3",
+    "modelId": "clothes-rack",
+    "path": "assets/models/clothes-rack.glb",
+    "position": "5 0.8 0",
+    "rotation": "0 100 0",
     "height": 3,
     "animationType": "None"
   }
