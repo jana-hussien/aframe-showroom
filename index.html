@@ -367,6 +367,22 @@
                 entity.setAttribute('reset-on-release', `info: ${model.name || model.id}`);
                 entity.setAttribute('highlight-on-hand-hover', '');
                 entity.setAttribute('sphere-collider', 'objects: [data-left$=-tip],[data-right$=-tip];');
+
+                // Add two magnet handles for two-handed grab/scale
+                const handle1 = document.createElement('a-entity');
+                handle1.setAttribute('class', 'magnet-left magnet-right');
+                handle1.setAttribute('data-magnet-range', '0.2,0.1,360,180');
+                handle1.setAttribute('data-pick-up', 'parent');
+                handle1.setAttribute('position', '0.15 0.2 0');
+                handle1.setAttribute('rotation', '0 0 0');
+                entity.appendChild(handle1);
+                const handle2 = document.createElement('a-entity');
+                handle2.setAttribute('class', 'magnet-left magnet-right');
+                handle2.setAttribute('data-magnet-range', '0.2,0.1,360,180');
+                handle2.setAttribute('data-pick-up', 'parent');
+                handle2.setAttribute('position', '-0.15 0.2 0');
+                handle2.setAttribute('rotation', '0 0 0');
+                entity.appendChild(handle2);
               }
 
               // Listen for model-loaded event
