@@ -63,10 +63,6 @@
     <a-light type="point" intensity="2" distance="8" decay="2" color="#fff" position="0 2 0"></a-light>
     <a-entity id="models-root"></a-entity>
 
-    <!-- Hand tracking grab controls for pinch-to-grab and two-hand scaling -->
-    <a-entity id="leftHand" hand-tracking-grab-controls="hand: left; hoverEnabled: true;"></a-entity>
-    <a-entity id="rightHand" hand-tracking-grab-controls="hand: right; hoverEnabled: true;"></a-entity>
-
     <!-- Camera rig and teleport controls -->
     <a-entity
       id="cameraRig"
@@ -90,6 +86,9 @@
       <a-entity data-left="ray" mixin="blink" cursor="" raycaster="objects:[html];far:0.3;showLine:false;lineColor:black;">
         <a-entity position="0 0 -0.22" visible="false" class="pose-label" text="value: Hello World; align: center;"></a-entity>
       </a-entity>
+      <!-- Hand tracking grab controls for pinch-to-grab and two-hand scaling (parented to cameraRig) -->
+      <a-entity id="leftHand" hand-tracking-grab-controls="hand: left; hoverEnabled: true;"></a-entity>
+      <a-entity id="rightHand" hand-tracking-grab-controls="hand: right; hoverEnabled: true;"></a-entity>
     </a-entity>
 
     <a-entity id="popup-ui" position="0 1.2 -2"></a-entity>
