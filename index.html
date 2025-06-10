@@ -48,7 +48,7 @@
 
     <a-assets>
       <a-asset-item id="navmesh-glb" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/environment/navmesh.glb"></a-asset-item>
-      <a-asset-item id="environment-gltf" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/environment/scene.gltf"></a-asset-item>
+      <a-asset-item id="environment-gltf" src="assets/models/environment/scene.gltf"></a-asset-item>
       <a-asset-item id="watch-gltf" src="https://cdn.jsdelivr.net/gh/jana-hussien/aframe-showroom/assets/models/watch.glb"></a-asset-item>
       <a-mixin id="blink" blink-controls="button:trigger;rotateOnTeleport:false;cameraRig: #cameraRig; teleportOrigin: #head; collisionEntities:.navmesh;"></a-mixin>
       <a-mixin id="handle-visual" geometry="width:0.05;height:0.05;depth:0.2"></a-mixin>
@@ -469,22 +469,40 @@
     this.grabbed = false;
     this.grabCount = 0; // Track number of active grabs (for two-handed)
     // Listen for grab and release events (super-hands/handy-controls)
-    el.addEventListener('grab-start', this.onGrabStart.bind(this));
-    el.addEventListener('grab-end', this.onGrabEnd.bind(this));
-    el.addEventListener('grabbed', this.onGrabbed.bind(this));
-    el.addEventListener('released', this.onReleased.bind(this));
+    el.addEventListener('grab-start', (evt) => {
+      console.log('[reset-on-release:EVENT] grab-start', el.id, evt);
+      this.onGrabStart(evt);
+    });
+    el.addEventListener('grab-end', (evt) => {
+      console.log('[reset-on-release:EVENT] grab-end', el.id, evt);
+      this.onGrabEnd(evt);
+    });
+    el.addEventListener('grabbed', (evt) => {
+      console.log('[reset-on-release:EVENT] grabbed', el.id, evt);
+      this.onGrabbed(evt);
+    });
+    el.addEventListener('released', (evt) => {
+      console.log('[reset-on-release:EVENT] released', el.id, evt);
+      this.onReleased(evt);
+    });
+    el.addEventListener('magnetstart', (evt) => {
+      console.log('[reset-on-release:EVENT] magnetstart', el.id, evt);
+    });
+    el.addEventListener('magnetend', (evt) => {
+      console.log('[reset-on-release:EVENT] magnetend', el.id, evt);
+    });
     console.log('[reset-on-release:init]', el.id, 'originalPosition', this.originalPosition, 'originalScale', this.originalScale);
   },
   onGrabStart: function (evt) {
     this.grabbed = true;
     console.log('[reset-on-release:onGrabStart]', this.el.id, evt);
     this.pauseAnimations();
-    this.showInfoPanel();
+    this.showInfoPanel(); // Always show info panel on grab-start
   },
   onGrabEnd: function (evt) {
     this.grabbed = false;
     console.log('[reset-on-release:onGrabEnd]', this.el.id, evt);
-    this.hideInfoPanel();
+    // Do not hide info panel here; only hide on released
     this.resetModel();
   },
   onGrabbed: function(evt) {
