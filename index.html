@@ -80,7 +80,7 @@
       </a-entity>
 
       <!-- Hand tracking and teleportation-->
-      <a-entity handy-controls="right:#right-gltf;left:#left-gltf;materialOverride:right,left;" material="color:#e2b18a;metalness:0.2;roughness:0.7;">
+      <a-entity handy-controls="right:#right-gltf;left:#left-gltf;materialOverride:right,left;" material="color:#e2b18a;metalness:0.2;roughness:0.7;" super-hands>
         <!-- Teleportation (blink-controls) on index finger tip -->
         <a-entity data-right="index-finger-tip" mixin="blink" blink-controls="snapTurn:false;startEvents:pose_point_fuseShort;endEvents:pose_point_fuseLong;cancelEvents:pose_cancel_point;"></a-entity>
         <a-entity data-left="index-finger-tip"  mixin="blink" blink-controls="snapTurn:false;startEvents:pose_point_fuseShort;endEvents:pose_point_fuseLong;cancelEvents:pose_cancel_point;"></a-entity>
